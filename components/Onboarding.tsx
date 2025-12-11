@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { UserProfile, Player, PlayerStatus } from '../types';
 import { evaluatePlayer, generateOnboardingData } from '../services/geminiService';
-import { Loader2, Upload, User, ArrowRight, CheckCircle2, FlaskConical, LayoutDashboard } from 'lucide-react';
+import { Loader2, Upload, User, ArrowRight, CheckCircle2, FlaskConical, LayoutDashboard, Database, Trophy, Mail, Target, BrainCircuit } from 'lucide-react';
 
 interface OnboardingProps {
     onComplete: (profile: UserProfile, firstPlayer: Player | null) => void;
@@ -17,15 +17,24 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
     const [role, setRole] = useState('Coach');
     const [region, setRegion] = useState('');
 
-    // Step 2 State
+    // Step 2 State (Quiz)
+    const [quizAnswers, setQuizAnswers] = useState({
+        environment: '',
+        access: '',
+        contact: '',
+        motivation: ''
+    });
+
+    // Step 3 State (Player Analysis)
     const [playerInput, setPlayerInput] = useState('');
     const [playerImage, setPlayerImage] = useState<string | null>(null);
     const [playerMimeType, setPlayerMimeType] = useState('image/jpeg');
 
-    // Step 3 State
+    // Step 4 State (Results)
     const [aiEvaluation, setAiEvaluation] = useState<any>(null);
     const [generatedTasks, setGeneratedTasks] = useState<string[]>([]);
     const [welcomeMessage, setWelcomeMessage] = useState('');
+    const [scoutPersona, setScoutPersona] = useState('');
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -42,21 +51,26 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
         }
     };
 
+    const handleQuizSelect = (key: string, value: string) => {
+        setQuizAnswers(prev => ({ ...prev, [key]: value }));
+    };
+
     const submitProfile = async () => {
         if (!name || !region) return;
         setLoading(true);
         try {
-            // Generate personalization data here so it's available even if they skip step 2
-            const personalization = await generateOnboardingData(role, region);
+            // Generate personalization data using Quiz Answers
+            const personalization = await generateOnboardingData(role, region, quizAnswers);
             setGeneratedTasks(personalization.tasks);
             setWelcomeMessage(personalization.welcomeMessage);
-            setStep(2);
+            setScoutPersona(personalization.scoutPersona);
+            setStep(3);
         } catch (e) {
             console.error("Error generating profile data", e);
-            // Fallback defaults if AI fails
             setGeneratedTasks(["Explore the dashboard", "Review reference players", "Check knowledge base"]);
             setWelcomeMessage("Welcome to the platform!");
-            setStep(2);
+            setScoutPersona("The Scout");
+            setStep(3);
         } finally {
             setLoading(false);
         }
@@ -66,6 +80,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
         const user: UserProfile = {
             name, role, region,
             weeklyTasks: generatedTasks,
+            scoutPersona: scoutPersona,
             scoutId: `scout-${Date.now().toString(36)}`
         };
         // Complete onboarding without a player
@@ -78,7 +93,8 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
             role: "Head Coach",
             region: "California, USA",
             affiliation: "West Coast Academy",
-            weeklyTasks: ["Identify 2 new wingers", "Finalize showcase roster", "Review ITP standards"],
+            scoutPersona: "The Architect",
+            weeklyTasks: ["Check 'Not Interested' college lists", "Review last week's game video", "Contact club directors"],
             scoutId: "demo-alex-123"
         };
 
@@ -124,13 +140,12 @@ Goal: Earn a scholarship to a D1 college.`
         if (!playerInput && !playerImage) return;
         setLoading(true);
         try {
-            // Evaluate Player
             const isImage = !!playerImage;
             const dataToEval = isImage ? playerImage! : playerInput;
             const evalResult = await evaluatePlayer(dataToEval, isImage, playerMimeType);
             
             setAiEvaluation(evalResult);
-            setStep(3);
+            setStep(4);
         } catch (error) {
             console.error(error);
             alert("Error analyzing player. Please try again.");
@@ -143,12 +158,13 @@ Goal: Earn a scholarship to a D1 college.`
         const user: UserProfile = {
             name, role, region,
             weeklyTasks: generatedTasks,
+            scoutPersona: scoutPersona,
             scoutId: `scout-${Date.now().toString(36)}`
         };
         
         const player: Player = {
             id: Date.now().toString(),
-            name: "New Recruit", // AI could extract this, simplified for now
+            name: "New Recruit", 
             age: 0,
             position: "Unknown",
             status: PlayerStatus.LEAD,
@@ -160,17 +176,44 @@ Goal: Earn a scholarship to a D1 college.`
         onComplete(user, player);
     };
 
+    // --- RENDER HELPERS ---
+    
+    const QuizCard = ({ title, icon, options, selected, onSelect }: any) => (
+        <div className="bg-scout-900/50 rounded-xl p-5 border border-scout-700 hover:border-scout-600 transition-colors">
+            <div className="flex items-center gap-2 mb-3">
+                <div className="text-scout-accent">{icon}</div>
+                <h3 className="font-bold text-white text-sm">{title}</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+                {options.map((opt: string) => (
+                    <button
+                        key={opt}
+                        onClick={() => onSelect(opt)}
+                        className={`text-xs p-2 rounded border text-left transition-all ${
+                            selected === opt 
+                            ? 'bg-scout-accent text-scout-900 border-scout-accent font-bold' 
+                            : 'bg-scout-800 border-scout-700 text-gray-400 hover:text-white hover:bg-scout-700'
+                        }`}
+                    >
+                        {opt}
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-scout-900 to-black">
-            <div className="max-w-xl w-full bg-scout-800 border border-scout-700 rounded-2xl shadow-2xl p-8">
+            <div className="max-w-2xl w-full bg-scout-800 border border-scout-700 rounded-2xl shadow-2xl p-8">
                 
                 {/* Progress Bar */}
                 <div className="flex gap-2 mb-8">
-                    {[1, 2, 3].map(i => (
+                    {[1, 2, 3, 4].map(i => (
                         <div key={i} className={`h-2 flex-1 rounded-full ${step >= i ? 'bg-scout-accent' : 'bg-scout-700'}`}></div>
                     ))}
                 </div>
 
+                {/* STEP 1: BASICS */}
                 {step === 1 && (
                     <div className="space-y-6 animate-fade-in">
                         <div className="text-center">
@@ -192,9 +235,10 @@ Goal: Earn a scholarship to a D1 college.`
                                     value={role} onChange={e => setRole(e.target.value)}
                                     className="w-full bg-scout-900 border border-scout-700 rounded p-3 text-white focus:border-scout-accent outline-none"
                                 >
-                                    <option>Coach</option>
-                                    <option>Player</option>
-                                    <option>Agent</option>
+                                    <option>College Coach</option>
+                                    <option>Club Director/Coach</option>
+                                    <option>Independent Scout</option>
+                                    <option>Agent/Advisor</option>
                                     <option>Parent</option>
                                 </select>
                             </div>
@@ -210,11 +254,11 @@ Goal: Earn a scholarship to a D1 college.`
                         
                         <div className="flex flex-col gap-3">
                             <button 
-                                onClick={submitProfile} 
-                                disabled={loading || !name || !region}
+                                onClick={() => setStep(2)} 
+                                disabled={!name || !region}
                                 className="w-full bg-scout-accent hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2"
                             >
-                                {loading ? <Loader2 className="animate-spin" /> : <>Next Step <ArrowRight size={18}/></>}
+                                Continue <ArrowRight size={18}/>
                             </button>
 
                             <button 
@@ -227,11 +271,66 @@ Goal: Earn a scholarship to a D1 college.`
                     </div>
                 )}
 
+                {/* STEP 2: SCOUT DNA QUIZ */}
                 {step === 2 && (
                     <div className="space-y-6 animate-fade-in">
+                        <div className="text-center">
+                            <h1 className="text-2xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+                                <BrainCircuit className="text-scout-highlight" /> What's your "Scout DNA"?
+                            </h1>
+                            <p className="text-gray-400 text-sm">Most scouts sit on a gold mine of players without realizing it. <br/>Answer these to unlock your personalized strategy.</p>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <QuizCard 
+                                title="Where do you spend most time?" 
+                                icon={<Target size={18} />}
+                                options={['College Sidelines', 'Club Training', 'Video/Online', 'Tournaments']}
+                                selected={quizAnswers.environment}
+                                onSelect={(val: string) => handleQuizSelect('environment', val)}
+                            />
+                            <QuizCard 
+                                title="What tools do you ALREADY have?" 
+                                icon={<Database size={18} />}
+                                options={['Recruiting Database', 'Club Roster Access', 'Veo/Hudl Login', 'Just my Phone']}
+                                selected={quizAnswers.access}
+                                onSelect={(val: string) => handleQuizSelect('access', val)}
+                            />
+                            <QuizCard 
+                                title="How do players reach you?" 
+                                icon={<Mail size={18} />}
+                                options={['Email Flood', 'Instagram DMs', 'In Person', 'They Don\'t yet']}
+                                selected={quizAnswers.contact}
+                                onSelect={(val: string) => handleQuizSelect('contact', val)}
+                            />
+                             <QuizCard 
+                                title="Your Main Goal?" 
+                                icon={<Trophy size={18} />}
+                                options={['Fill my Roster', 'Help kids get signed', 'Make extra income', 'Build network']}
+                                selected={quizAnswers.motivation}
+                                onSelect={(val: string) => handleQuizSelect('motivation', val)}
+                            />
+                        </div>
+
+                        <button 
+                            onClick={submitProfile} 
+                            disabled={loading || Object.values(quizAnswers).some(v => !v)}
+                            className="w-full bg-scout-accent hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2"
+                        >
+                            {loading ? <Loader2 className="animate-spin" /> : 'Generate My Strategy'}
+                        </button>
+                    </div>
+                )}
+
+                {/* STEP 3: ANALYZE PLAYER */}
+                {step === 3 && (
+                    <div className="space-y-6 animate-fade-in">
                          <div className="text-center">
-                            <h1 className="text-3xl font-bold text-white mb-2">Analyze First Player</h1>
-                            <p className="text-gray-400">Upload a screenshot of stats, a roster, or just type notes. AI does the rest.</p>
+                            <div className="inline-block px-3 py-1 rounded-full bg-scout-highlight/10 text-scout-highlight border border-scout-highlight/30 text-xs font-bold mb-4">
+                                Strategy Unlocked: {scoutPersona}
+                            </div>
+                            <h1 className="text-3xl font-bold text-white mb-2">Analyze Your First Player</h1>
+                            <p className="text-gray-400">Let's test the AI. Upload a screenshot of stats, a roster, or just type notes.</p>
                         </div>
 
                         <div className="space-y-4">
@@ -291,7 +390,8 @@ Goal: Earn a scholarship to a D1 college.`
                     </div>
                 )}
 
-                {step === 3 && aiEvaluation && (
+                {/* STEP 4: RESULT */}
+                {step === 4 && aiEvaluation && (
                      <div className="space-y-6 animate-fade-in text-center">
                          <div className="flex flex-col items-center">
                             <div className="w-16 h-16 bg-scout-accent/20 rounded-full flex items-center justify-center mb-4 text-scout-accent">

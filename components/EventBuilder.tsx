@@ -28,14 +28,25 @@ const EventBuilder: React.FC<EventBuilderProps> = ({ events, onAddEvent }) => {
     if (!name || !location || !date) return;
     setLoading(true);
     
+    // Default values for required fields not in this simple form
+    const type = 'ID Day';
+    const fee = 'Free';
+
     try {
-        const plan = await generateEventPlan(name, location, date);
+        const plan = await generateEventPlan(name, location, date, type, fee);
         const newEvent: ScoutingEvent = {
             id: Date.now().toString(),
-            name,
+            isMine: true,
+            title: name,
             location,
             date,
-            plan
+            type,
+            fee,
+            status: 'Draft',
+            registeredCount: 0,
+            marketingCopy: plan.marketingCopy,
+            agenda: plan.agenda,
+            checklist: plan.checklist
         };
         onAddEvent(newEvent);
         setIsCreating(false);
@@ -223,7 +234,7 @@ const EventBuilder: React.FC<EventBuilderProps> = ({ events, onAddEvent }) => {
                                 <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-red-500/20 text-red-400 mb-2 inline-block">
                                     Hosting
                                 </span>
-                                <h3 className="text-xl font-bold text-white">{evt.name}</h3>
+                                <h3 className="text-xl font-bold text-white">{evt.title}</h3>
                             </div>
                             
                             <div className="space-y-2 mb-6">
@@ -244,16 +255,16 @@ const EventBuilder: React.FC<EventBuilderProps> = ({ events, onAddEvent }) => {
                                 {expandedEventId === evt.id ? 'Hide Plan' : 'Manage Event'} <ChevronRight size={14} className={`transition-transform ${expandedEventId === evt.id ? 'rotate-90' : ''}`}/>
                             </button>
 
-                            {expandedEventId === evt.id && evt.plan && (
+                            {expandedEventId === evt.id && (evt.marketingCopy || evt.checklist) && (
                                 <div className="mt-4 pt-4 border-t border-scout-700 animate-fade-in text-sm">
                                     <div className="mb-3">
                                         <p className="font-semibold text-scout-accent mb-1 flex items-center gap-2"><FileText size={12}/> Marketing Copy</p>
-                                        <p className="text-gray-400 italic">"{evt.plan.marketingCopy}"</p>
+                                        <p className="text-gray-400 italic">"{evt.marketingCopy}"</p>
                                     </div>
                                     <div>
                                         <p className="font-semibold text-gray-300 mb-2 flex items-center gap-2"><CheckSquare size={12}/> Checklist</p>
                                         <ul className="space-y-1">
-                                            {(evt.plan.checklist || []).slice(0, 3).map((item, idx) => (
+                                            {(evt.checklist || []).slice(0, 3).map((item, idx) => (
                                                 <li key={idx} className="flex items-center gap-2 text-gray-400">
                                                     <span className="w-1 h-1 bg-gray-500 rounded-full"></span> {item}
                                                 </li>

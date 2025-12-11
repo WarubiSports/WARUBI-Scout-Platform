@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { X, Upload, CheckCircle, Loader2, FlaskConical, User, Calendar, Activity, GraduationCap } from 'lucide-react';
-import { evaluatePlayer } from '../services/geminiService';
+import { X, Upload, CheckCircle, Loader2, FlaskConical, User, Calendar, Activity, GraduationCap, ClipboardPaste, Sparkles, Mail, Phone } from 'lucide-react';
+import { evaluatePlayer, parsePlayerDetails } from '../services/geminiService';
 import { Player, PlayerStatus, PlayerEvaluation } from '../types';
 
 interface PlayerSubmissionProps {
@@ -13,6 +13,7 @@ const RATINGS = ["Elite", "Top 10%", "Above Average", "Average", "Below Average"
 
 const PlayerSubmission: React.FC<PlayerSubmissionProps> = ({ onClose, onAddPlayer }) => {
   const [loading, setLoading] = useState(false);
+  const [parsing, setParsing] = useState(false);
   const [step, setStep] = useState<'input' | 'review'>('input');
   
   // Single Player Form State
@@ -32,6 +33,9 @@ const PlayerSubmission: React.FC<PlayerSubmissionProps> = ({ onClose, onAddPlaye
     gpa: '',
     testScore: '',
     club: '',
+    email: '',
+    phone: '',
+    parentEmail: '',
     ratings: {
       speed: 'Above Average',
       strength: 'Above Average',
@@ -45,6 +49,7 @@ const PlayerSubmission: React.FC<PlayerSubmissionProps> = ({ onClose, onAddPlaye
   const [image, setImage] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState('image/jpeg');
   const [evalResult, setEvalResult] = useState<PlayerEvaluation | null>(null);
+  const [pasteInput, setPasteInput] = useState('');
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -89,6 +94,9 @@ const PlayerSubmission: React.FC<PlayerSubmissionProps> = ({ onClose, onAddPlaye
       gpa: '3.6',
       testScore: '1250 SAT',
       club: 'East Coast Elite Academy',
+      email: 'marco.rossi@example.com',
+      phone: '555-0123',
+      parentEmail: 'mario.rossi@example.com',
       ratings: {
         speed: 'Elite',
         strength: 'Average',
@@ -98,6 +106,39 @@ const PlayerSubmission: React.FC<PlayerSubmissionProps> = ({ onClose, onAddPlaye
         tactical: 'Above Average'
       }
     });
+  };
+
+  const handleAutoFill = async () => {
+      if (!pasteInput.trim()) return;
+      setParsing(true);
+      try {
+          const parsed = await parsePlayerDetails(pasteInput);
+          if (parsed) {
+              setFormData(prev => ({
+                  ...prev,
+                  firstName: parsed.firstName || prev.firstName,
+                  lastName: parsed.lastName || prev.lastName,
+                  email: parsed.email || prev.email,
+                  phone: parsed.phone || prev.phone,
+                  parentEmail: parsed.parentEmail || prev.parentEmail,
+                  position: parsed.position || prev.position,
+                  dob: parsed.dob || prev.dob,
+                  gradYear: parsed.gradYear || prev.gradYear,
+                  club: parsed.club || prev.club,
+                  region: parsed.region || prev.region,
+                  heightFt: parsed.heightFt || prev.heightFt,
+                  heightIn: parsed.heightIn || prev.heightIn,
+                  gpa: parsed.gpa || prev.gpa,
+              }));
+              setPasteInput(''); // Clear input on success
+          } else {
+              alert("Could not extract data. Please try again.");
+          }
+      } catch (e) {
+          alert("Parsing error.");
+      } finally {
+          setParsing(false);
+      }
   };
 
   // Single Player Submit
@@ -126,6 +167,7 @@ Gender: ${formData.gender}
 DOB: ${formData.dob} (Grad Year: ${formData.gradYear})
 Location: ${formData.region}, ${formData.nationality}
 Club: ${formData.club}
+Contact: ${formData.email}, ${formData.phone}, Parent: ${formData.parentEmail}
 Physical: ${formData.heightFt}'${formData.heightIn}", ${formData.foot}-footed
 Position: ${formData.position} (Secondary: ${formData.secondaryPosition})
 Academics: GPA ${formData.gpa}, Test ${formData.testScore}
@@ -177,6 +219,9 @@ Scout Ratings (vs Teammates):
         age: age,
         position: formData.position || "Unknown",
         status: PlayerStatus.LEAD,
+        email: formData.email,
+        phone: formData.phone,
+        parentEmail: formData.parentEmail,
         submittedAt: new Date().toISOString(),
         outreachLogs: [],
         evaluation: evalResult
@@ -219,6 +264,31 @@ Scout Ratings (vs Teammates):
                                 </button>
                             </div>
 
+                            {/* AUTO-FILL / PASTE SECTION */}
+                            <div className="bg-gradient-to-r from-scout-800 to-scout-900 border border-scout-600 rounded-xl p-4 shadow-lg">
+                                <div className="flex items-center gap-2 mb-2 text-white font-bold text-sm">
+                                    <Sparkles size={16} className="text-scout-highlight" />
+                                    <span>Quick Fill from Text</span>
+                                </div>
+                                <div className="flex gap-2">
+                                    <input 
+                                        type="text"
+                                        value={pasteInput}
+                                        onChange={(e) => setPasteInput(e.target.value)}
+                                        placeholder="Paste info here: 'John Smith, 555-1234, ST for FC Dallas...'"
+                                        className="flex-1 bg-scout-900 border border-scout-700 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-scout-accent placeholder-gray-600"
+                                    />
+                                    <button 
+                                        onClick={handleAutoFill}
+                                        disabled={parsing || !pasteInput}
+                                        className="bg-scout-700 hover:bg-scout-600 text-white px-4 py-2 rounded text-xs font-bold whitespace-nowrap border border-scout-600 transition-colors flex items-center gap-2"
+                                    >
+                                        {parsing ? <Loader2 size={14} className="animate-spin"/> : <ClipboardPaste size={14} />}
+                                        Auto-Fill
+                                    </button>
+                                </div>
+                            </div>
+
                             {/* Upload Banner */}
                             <div className="bg-scout-800/30 border border-dashed border-scout-700 rounded-xl p-4 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
@@ -237,11 +307,11 @@ Scout Ratings (vs Teammates):
                             </div>
 
                             <div className="grid md:grid-cols-2 gap-6">
-                                {/* SECTION 1: BIO & PHYSICAL */}
+                                {/* SECTION 1: BIO & PHYSICAL & CONTACT */}
                                 <div className="bg-scout-800 rounded-xl border border-scout-700 p-5">
                                     <div className="flex items-center gap-2 mb-4 text-scout-accent">
                                         <User size={18} />
-                                        <h4 className="font-bold text-white">Bio & Physical</h4>
+                                        <h4 className="font-bold text-white">Bio & Details</h4>
                                     </div>
                                     
                                     <div className="space-y-3">
@@ -263,6 +333,24 @@ Scout Ratings (vs Teammates):
                                                     value={formData.lastName}
                                                     onChange={e => handleInputChange('lastName', e.target.value)}
                                                 />
+                                            </div>
+                                        </div>
+
+                                        {/* Contact Section */}
+                                        <div className="bg-scout-900/50 p-2 rounded border border-scout-700/50 space-y-2">
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div>
+                                                    <label className="block text-[10px] uppercase text-gray-500 font-bold mb-1 flex items-center gap-1"><Mail size={10}/> Email</label>
+                                                    <input type="text" className="w-full bg-scout-800 border border-scout-600 rounded px-2 py-1 text-xs text-white focus:outline-none" value={formData.email} onChange={e => handleInputChange('email', e.target.value)} placeholder="player@email.com" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] uppercase text-gray-500 font-bold mb-1 flex items-center gap-1"><Phone size={10}/> Phone</label>
+                                                    <input type="text" className="w-full bg-scout-800 border border-scout-600 rounded px-2 py-1 text-xs text-white focus:outline-none" value={formData.phone} onChange={e => handleInputChange('phone', e.target.value)} placeholder="555-0123" />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] uppercase text-gray-500 font-bold mb-1 flex items-center gap-1"><User size={10}/> Parent Email</label>
+                                                <input type="text" className="w-full bg-scout-800 border border-scout-600 rounded px-2 py-1 text-xs text-white focus:outline-none" value={formData.parentEmail} onChange={e => handleInputChange('parentEmail', e.target.value)} placeholder="parent@email.com" />
                                             </div>
                                         </div>
 

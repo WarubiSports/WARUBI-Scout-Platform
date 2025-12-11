@@ -9,7 +9,8 @@ export enum DashboardTab {
   EVENTS = 'EVENTS',
   KNOWLEDGE = 'KNOWLEDGE',
   PROFILE = 'PROFILE',
-  OUTREACH = 'OUTREACH'
+  OUTREACH = 'OUTREACH',
+  NEWS = 'NEWS'
 }
 
 export enum PlayerStatus {
@@ -26,7 +27,8 @@ export interface UserProfile {
   role: string;
   region: string;
   affiliation?: string;
-  weeklyTasks: string[];
+  scoutPersona?: string; // e.g. "The Networker", "The Data Analyst", "The Field General"
+  weeklyTasks: string[]; // These will now be "Power Moves"
   scoutId?: string; // Unique ID for tracking referrals
 }
 
@@ -55,6 +57,12 @@ export interface Player {
   age: number;
   position: string;
   status: PlayerStatus;
+  
+  // Contact Info
+  email?: string;
+  phone?: string;
+  parentEmail?: string;
+
   interestedProgram?: string; // e.g. "UCLA"
   placedLocation?: string;    // e.g. "Signed with FC Dallas"
   evaluation: PlayerEvaluation | null;
@@ -62,16 +70,25 @@ export interface Player {
   submittedAt: string;
 }
 
+export type EventStatus = 'Draft' | 'Pending Approval' | 'Approved' | 'Published' | 'Completed' | 'Rejected';
+
 export interface ScoutingEvent {
   id: string;
-  name: string;
+  isMine: boolean; // True if hosting, False if attending/viewing
+  status: EventStatus;
+  title: string;
   date: string;
   location: string;
-  plan: {
-    agenda: string[];
-    marketingCopy: string;
-    checklist: string[];
-  } | null;
+  type: 'ID Day' | 'Showcase' | 'Camp' | 'Tournament';
+  fee: string; // e.g. "$50" or "Free"
+  
+  // AI Generated Assets (Only for hosted events)
+  marketingCopy?: string;
+  agenda?: string[];
+  checklist?: string[];
+  
+  // Stats
+  registeredCount: number;
 }
 
 export interface KnowledgeItem {

@@ -1,15 +1,15 @@
-
 import React, { useState } from 'react';
 import { UserProfile, Player, DashboardTab, ScoutingEvent, PlayerStatus, OutreachLog } from '../types';
 import { ITP_REFERENCE_PLAYERS } from '../constants';
 import PlayerCard from './PlayerCard';
-import EventBuilder from './EventBuilder';
+import EventHub from './EventHub';
 import KnowledgeTab from './KnowledgeTab';
 import ProfileTab from './ProfileTab';
 import OutreachTab from './OutreachTab';
+import NewsTab from './NewsTab';
 import PlayerSubmission from './PlayerSubmission';
 import TutorialOverlay from './TutorialOverlay';
-import { LayoutDashboard, Users, CalendarDays, GraduationCap, CheckCircle, UserCircle, MessageSquare, LayoutGrid, List, ChevronDown, MessageCircle as MsgIcon, Search, Filter, ChevronLeft, ChevronRight, HelpCircle, PlusCircle } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarDays, GraduationCap, CheckCircle, UserCircle, MessageSquare, LayoutGrid, List, ChevronDown, MessageCircle as MsgIcon, Search, Filter, ChevronLeft, ChevronRight, HelpCircle, PlusCircle, Sparkles, Newspaper, X, Zap, Info, Trophy, BookOpen } from 'lucide-react';
 
 interface DashboardProps {
   user: UserProfile;
@@ -22,6 +22,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, on
   const [events, setEvents] = useState<ScoutingEvent[]>([]);
   const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(true); // Default to showing tutorial on load
+  const [showDailyKickoff, setShowDailyKickoff] = useState(true); // Default to show
+  const [showTierGuide, setShowTierGuide] = useState(false);
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
   const [outreachTargetId, setOutreachTargetId] = useState<string | null>(null);
   
@@ -77,6 +79,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, on
       setActiveTab(DashboardTab.OUTREACH);
   };
 
+  const handleUpdateEvent = (updatedEvent: ScoutingEvent) => {
+      setEvents(prev => prev.map(e => e.id === updatedEvent.id ? updatedEvent : e));
+  };
+
   // --- Filtering Logic ---
   const filteredPlayers = players.filter(p => {
       const matchesSearch = 
@@ -130,6 +136,129 @@ const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, on
     return 'text-gray-400';
   };
 
+  // --- Daily Kickoff Component ---
+  const DailyKickoff = () => (
+      <div className="mb-6 bg-gradient-to-r from-scout-800 to-scout-900 border border-scout-600 rounded-xl p-6 relative overflow-hidden animate-fade-in shadow-lg">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-scout-accent/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+          
+          <button onClick={() => setShowDailyKickoff(false)} className="absolute top-3 right-3 text-gray-400 hover:text-white">
+              <X size={16} />
+          </button>
+
+          <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="w-12 h-12 bg-scout-accent rounded-full flex items-center justify-center text-scout-900 font-bold shrink-0 shadow-glow">
+                  <Zap size={24} />
+              </div>
+              <div className="flex-1">
+                  <h3 className="text-lg font-bold text-white">Daily Kickoff</h3>
+                  <p className="text-sm text-gray-400">Keep the pipeline moving. Choose one high-impact action for today:</p>
+              </div>
+              <div className="flex gap-3 w-full md:w-auto overflow-x-auto">
+                   <div className="bg-scout-900/50 border border-scout-700 p-3 rounded-lg min-w-[140px] text-center cursor-pointer hover:border-scout-accent transition-colors" onClick={() => setActiveTab(DashboardTab.OUTREACH)}>
+                      <MessageSquare size={16} className="mx-auto mb-2 text-blue-400" />
+                      <div className="text-xs font-bold text-white">Message 1 Lead</div>
+                   </div>
+                   <div className="bg-scout-900/50 border border-scout-700 p-3 rounded-lg min-w-[140px] text-center cursor-pointer hover:border-scout-accent transition-colors" onClick={() => setIsSubmissionOpen(true)}>
+                      <PlusCircle size={16} className="mx-auto mb-2 text-green-400" />
+                      <div className="text-xs font-bold text-white">Log 1 Player</div>
+                   </div>
+                   <div className="bg-scout-900/50 border border-scout-700 p-3 rounded-lg min-w-[140px] text-center cursor-pointer hover:border-scout-accent transition-colors" onClick={() => setActiveTab(DashboardTab.KNOWLEDGE)}>
+                      <GraduationCap size={16} className="mx-auto mb-2 text-yellow-400" />
+                      <div className="text-xs font-bold text-white">Learn 1 Rule</div>
+                   </div>
+              </div>
+          </div>
+      </div>
+  );
+
+  // --- Tier Explanation Modal ---
+  const TierExplanationModal = ({ onClose }: { onClose: () => void }) => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in" onClick={onClose}>
+        <div className="bg-scout-900 w-full max-w-4xl rounded-2xl border border-scout-700 shadow-2xl relative overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-scout-700 flex justify-between items-center bg-scout-800">
+                <div>
+                    <h2 className="text-xl font-bold text-white">The Warubi Tier System</h2>
+                    <p className="text-gray-400 text-sm">We find opportunities for every level of player.</p>
+                </div>
+                <button onClick={onClose} className="text-gray-400 hover:text-white"><X size={24} /></button>
+            </div>
+            
+            <div className="p-8 grid md:grid-cols-3 gap-6 bg-scout-900 overflow-y-auto max-h-[70vh]">
+                {/* TIER 1 */}
+                <div className="bg-gradient-to-b from-emerald-900/20 to-scout-800 border border-emerald-500/30 rounded-xl p-6 relative group hover:border-emerald-500 transition-all">
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Trophy size={64} />
+                    </div>
+                    <span className="inline-block px-2 py-1 rounded bg-emerald-500 text-emerald-950 font-bold text-xs uppercase mb-4">Tier 1 • Elite</span>
+                    <h3 className="text-2xl font-bold text-white mb-2">Pro & Top D1</h3>
+                    <p className="text-gray-400 text-sm mb-6 min-h-[40px]">National team youth, academy standouts, or freak athletes.</p>
+                    
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-sm text-gray-300">
+                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                            <span>Full Scholarships (NCAA D1)</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-300">
+                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                            <span>Pro Development Contracts</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* TIER 2 */}
+                <div className="bg-gradient-to-b from-amber-900/20 to-scout-800 border border-amber-500/30 rounded-xl p-6 relative group hover:border-amber-500 transition-all">
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Sparkles size={64} />
+                    </div>
+                    <span className="inline-block px-2 py-1 rounded bg-amber-500 text-amber-950 font-bold text-xs uppercase mb-4">Tier 2 • Competitive</span>
+                    <h3 className="text-2xl font-bold text-white mb-2">Scholarship Level</h3>
+                    <p className="text-gray-400 text-sm mb-6 min-h-[40px]">High-level regional players, ECNL/GA starters, strong stats.</p>
+                    
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-sm text-gray-300">
+                            <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                            <span>Partial Scholarships (D1/D2/NAIA)</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-300">
+                            <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                            <span>High Academic Merit Aid</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* TIER 3 */}
+                <div className="bg-gradient-to-b from-blue-900/20 to-scout-800 border border-blue-500/30 rounded-xl p-6 relative group hover:border-blue-500 transition-all">
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <BookOpen size={64} />
+                    </div>
+                    <span className="inline-block px-2 py-1 rounded bg-blue-500 text-blue-950 font-bold text-xs uppercase mb-4">Tier 3 • Development</span>
+                    <h3 className="text-2xl font-bold text-white mb-2">Roster & Academic</h3>
+                    <p className="text-gray-400 text-sm mb-6 min-h-[40px]">Raw talent needing development or high-academic students.</p>
+                    
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-sm text-gray-300">
+                            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                            <span>Roster Spots (D3 / JuCo)</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-300">
+                            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                            <span>Gap Year Programs</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="p-6 bg-scout-800 border-t border-scout-700 text-center">
+                <p className="text-white font-medium text-lg mb-1">"Don't filter too early."</p>
+                <p className="text-gray-400 text-sm">Submit every player with potential. Our network has placement partners for all 3 tiers.</p>
+                <button onClick={onClose} className="mt-4 px-6 py-2 bg-scout-700 hover:bg-scout-600 text-white rounded-lg font-bold transition-colors">
+                    Got it, I'll submit them all
+                </button>
+            </div>
+        </div>
+    </div>
+  );
+
   return (
     <div className="flex h-screen bg-scout-900 text-white overflow-hidden">
         {/* Sidebar */}
@@ -163,6 +292,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, on
                     <span className="font-semibold">AI Outreach</span>
                 </button>
 
+                <div className="text-xs font-bold text-gray-500 px-4 mt-6 mb-2 uppercase tracking-wider">Network</div>
+                <button 
+                    onClick={() => setActiveTab(DashboardTab.NEWS)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded transition-colors ${activeTab === DashboardTab.NEWS ? 'bg-scout-700 text-white' : 'text-gray-400 hover:bg-scout-700/50'}`}
+                >
+                    <Newspaper size={20} /> Network News
+                </button>
+
                 <div className="text-xs font-bold text-gray-500 px-4 mt-6 mb-2 uppercase tracking-wider">Account</div>
                 <button 
                     onClick={() => setActiveTab(DashboardTab.KNOWLEDGE)}
@@ -184,13 +321,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, on
                 </button>
             </nav>
 
-            <div className="p-4 bg-scout-900/50 m-4 rounded border border-scout-700">
-                <h3 className="text-xs font-bold text-gray-500 uppercase mb-2">Weekly Focus</h3>
-                <ul className="space-y-2">
+            <div className="p-4 bg-scout-900/50 m-4 rounded-lg border border-scout-700 shadow-lg">
+                <div className="flex items-center gap-2 mb-3">
+                    <Sparkles size={14} className="text-scout-highlight" />
+                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">My Strategy: {user.scoutPersona || 'The Scout'}</h3>
+                </div>
+                <ul className="space-y-3">
                     {user.weeklyTasks.map((task, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
-                            <CheckCircle size={14} className="mt-0.5 text-scout-accent shrink-0" />
-                            <span className="leading-tight">{task}</span>
+                        <li key={i} className="flex items-start gap-2 text-xs text-gray-300">
+                            <CheckCircle size={12} className="mt-0.5 text-scout-accent shrink-0" />
+                            <span className="leading-tight font-medium">{task}</span>
                         </li>
                     ))}
                 </ul>
@@ -225,6 +365,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, on
             
             {activeTab === DashboardTab.PLAYERS && (
                 <div className="space-y-6 animate-fade-in h-[calc(100vh-100px)] flex flex-col">
+                    
+                    {/* DAILY KICKOFF CARD (Persistent high-level reminder) */}
+                    {showDailyKickoff && <DailyKickoff />}
+
                     <div className="flex flex-col md:flex-row justify-between items-end gap-4 flex-shrink-0">
                         <div>
                             <h2 className="text-3xl font-bold mb-1">Recruiting Pipeline</h2>
@@ -272,6 +416,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, on
                                     <option value="Tier 3">Tier 3 (Development)</option>
                                 </select>
                             </div>
+
+                            <button 
+                                onClick={() => setShowTierGuide(true)}
+                                className="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white text-sm transition-colors border border-transparent hover:border-scout-700 rounded"
+                                title="Understanding Tiers"
+                            >
+                                <Info size={16} /> <span className="hidden md:inline">Tier Guide</span>
+                            </button>
 
                             {viewMode === 'list' && (
                                 <div className="relative group/filter">
@@ -462,8 +614,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, on
             )}
 
             {activeTab === DashboardTab.EVENTS && (
-                <div className="animate-fade-in">
-                    <EventBuilder events={events} onAddEvent={(e) => setEvents([...events, e])} />
+                <div className="animate-fade-in h-[calc(100vh-100px)]">
+                    <EventHub 
+                        events={events} 
+                        user={user}
+                        onAddEvent={(e) => setEvents([...events, e])} 
+                        onUpdateEvent={handleUpdateEvent}
+                    />
                 </div>
             )}
 
@@ -480,9 +637,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, on
                 </div>
             )}
 
+            {activeTab === DashboardTab.NEWS && (
+                <div className="animate-fade-in">
+                    <h2 className="text-2xl font-bold text-white mb-6">Network News & Updates</h2>
+                    <NewsTab />
+                </div>
+            )}
+
             {activeTab === DashboardTab.KNOWLEDGE && (
                 <div className="animate-fade-in">
-                    <KnowledgeTab />
+                    <KnowledgeTab user={user} />
                     <div className="mt-8 border-t border-scout-700 pt-8">
                          <h3 className="text-xl font-bold mb-4 text-gray-300">Reference Profiles (Standards)</h3>
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-75">
@@ -511,6 +675,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, on
              {/* Tutorial Overlay */}
              {showTutorial && (
                 <TutorialOverlay onClose={() => setShowTutorial(false)} />
+             )}
+
+             {/* Tier Guide Modal */}
+             {showTierGuide && (
+                <TierExplanationModal onClose={() => setShowTierGuide(false)} />
              )}
         </main>
     </div>

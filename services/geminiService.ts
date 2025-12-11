@@ -40,6 +40,70 @@ const cleanJson = (text: string) => {
   return clean;
 };
 
+// 0. Parse Player Details (Auto-Fill Form)
+export const parsePlayerDetails = async (text: string): Promise<any> => {
+    const ai = getAiClient();
+    const prompt = `
+        You are a data extraction assistant for a soccer scout.
+        I will provide a block of raw text that might contain a player's bio, contact info, parents' info, and stats.
+
+        Task: Extract specific fields to populate a submission form.
+        
+        Raw Text: "${text}"
+
+        Extract these fields (use empty string if not found):
+        - firstName
+        - lastName
+        - email (Player email)
+        - phone (Player phone)
+        - parentEmail (Any parent/guardian email found)
+        - position (e.g. CM, ST)
+        - dob (YYYY-MM-DD format if possible, otherwise string)
+        - gradYear (Year only)
+        - club (Club team name)
+        - region (City/State)
+        - heightFt (Number)
+        - heightIn (Number)
+        - gpa (Number or String)
+        
+        Return strict JSON.
+    `;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                responseMimeType: 'application/json',
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        firstName: { type: Type.STRING },
+                        lastName: { type: Type.STRING },
+                        email: { type: Type.STRING },
+                        phone: { type: Type.STRING },
+                        parentEmail: { type: Type.STRING },
+                        position: { type: Type.STRING },
+                        dob: { type: Type.STRING },
+                        gradYear: { type: Type.STRING },
+                        club: { type: Type.STRING },
+                        region: { type: Type.STRING },
+                        heightFt: { type: Type.STRING },
+                        heightIn: { type: Type.STRING },
+                        gpa: { type: Type.STRING },
+                    }
+                }
+            }
+        });
+        const text = response.text || "{}";
+        const cleaned = cleanJson(text);
+        return JSON.parse(cleaned);
+    } catch (e) {
+        console.error("Parse Error", e);
+        return {};
+    }
+};
+
 // 1. Evaluate Player (From Text or Image)
 export const evaluatePlayer = async (
   inputData: string,
@@ -158,19 +222,30 @@ export const evaluatePlayer = async (
 
 // 2. Generate Event Plan
 export const generateEventPlan = async (
-    eventName: string,
+    title: string,
     location: string,
-    date: string
-): Promise<ScoutingEvent['plan']> => {
+    date: string,
+    type: string,
+    fee: string
+): Promise<{ agenda: string[], marketingCopy: string, checklist: string[] }> => {
     const ai = getAiClient();
     const prompt = `
-        Create a detailed soccer scouting event plan for an event named "${eventName}" in "${location}" on "${date}".
-        Target audience: Local youth talents (16-19 years old).
+        You are an event planner for WARUBI Sports.
+        Create an "Event Kit" for a new soccer scouting event.
+
+        Event Details:
+        - Name: ${title}
+        - Type: ${type}
+        - Location: ${location}
+        - Date: ${date}
+        - Cost: ${fee}
         
-        Return JSON with:
-        - agenda: array of strings (time slots and activities)
-        - marketingCopy: string (short catchy text for a flyer)
-        - checklist: array of strings (items to bring or do)
+        Generate 3 things:
+        1. 'marketingCopy': A short, exciting blurb (with emojis) suitable for WhatsApp/Instagram to recruit players. Mention the date, location, and that spots are limited.
+        2. 'agenda': A 4-5 item timeline (e.g., 9:00 AM Check-in, 10:00 AM Matches).
+        3. 'checklist': 5 critical tasks the scout must do before the event (e.g., Book field, Print rosters).
+        
+        Return strict JSON.
     `;
 
     try {
@@ -193,34 +268,60 @@ export const generateEventPlan = async (
         const cleanedText = cleanJson(text);
         const parsed = JSON.parse(cleanedText);
         
-        // Ensure array safety
-        if (!Array.isArray(parsed.checklist)) parsed.checklist = [];
-        if (!Array.isArray(parsed.agenda)) parsed.agenda = [];
-        
-        return parsed;
+        // Defensive checks
+        return {
+            agenda: Array.isArray(parsed.agenda) ? parsed.agenda : ["09:00 AM - Arrival", "10:00 AM - Kickoff"],
+            marketingCopy: parsed.marketingCopy || `Join us for ${title}! ⚽️\n📍 ${location}\n📅 ${date}\nSign up now!`,
+            checklist: Array.isArray(parsed.checklist) ? parsed.checklist : ["Bring Balls", "Bring Bibs"]
+        };
     } catch (e) {
+        console.error("Event Gen Error", e);
         return {
             agenda: ["10:00 AM - Arrival", "10:30 AM - Warmup", "11:00 AM - Matches", "13:00 PM - Closing"],
-            marketingCopy: "Join us for the ultimate scouting showcase!",
-            checklist: ["Cones", "Bibs", "Balls", "Water", "Tablets"]
+            marketingCopy: `🔥 Upcoming WARUBI Event: ${title}\n📍 ${location}\n📅 ${date}\n💰 ${fee}\n\nDon't miss your chance to get scouted! Reply to register.`,
+            checklist: ["Confirm Field Booking", "Notify Staff", "Prepare Bibs & Balls", "Print Player Check-in List", "Bring Water"]
         };
     }
 };
 
-// 3. Generate Weekly Tasks & Personalization
+// 3. Generate Weekly Tasks & Personalization (Now includes Questionnaire Data)
 export const generateOnboardingData = async (
     role: string, 
-    region: string
-): Promise<{ tasks: string[], welcomeMessage: string }> => {
+    region: string,
+    quizAnswers?: Record<string, string>
+): Promise<{ tasks: string[], welcomeMessage: string, scoutPersona: string }> => {
     const ai = getAiClient();
+    
+    let context = `Role: ${role}, Region: ${region}.`;
+    if (quizAnswers) {
+        context += `
+        Additional Context from Scout Questionnaire:
+        - Primary Environment: ${quizAnswers['environment']}
+        - Existing Access: ${quizAnswers['access']}
+        - Contact Method: ${quizAnswers['contact']}
+        - Main Motivation: ${quizAnswers['motivation']}
+        `;
+    }
+
     const prompt = `
-        A new scout just joined WARUBI. 
-        Role: ${role}
-        Region: ${region}
+        You are a master head scout and mentor for WARUBI. A new scout has joined.
+        
+        Based on their profile:
+        ${context}
+        
+        Your Goal:
+        Identify "Hidden Gold Mines" in their existing network they might be overlooking.
+        Give them 3 HIGHLY SPECIFIC, actionable "Power Moves" to find players immediately.
+        
+        Examples of logic:
+        - If they are a College Coach, suggest: "Export your 'Not Interested' list from your recruiting software. Those players are perfect leads for Warubi."
+        - If they are a Club Coach, suggest: "Email the 3 best players cut from your ECNL/GA team tryouts."
+        - If they use Veo/Hudl, suggest: "Watch last week's opponent footage and ID their best player."
         
         Generate:
-        1. A short, motivating welcome message (1 sentence).
-        2. 3 specific weekly tasks for them to get started and build momentum.
+        1. 'scoutPersona': A cool 2-word title for them based on their answers (e.g., "The Connector", "The Tactician", "The Insider").
+        2. 'welcomeMessage': A short, punchy 1-sentence welcome that acknowledges their specific leverage.
+        3. 'tasks': 3 specific, non-generic tasks based on the logic above.
 
         Return JSON.
     `;
@@ -234,6 +335,7 @@ export const generateOnboardingData = async (
                 responseSchema: {
                     type: Type.OBJECT,
                     properties: {
+                        scoutPersona: { type: Type.STRING },
                         welcomeMessage: { type: Type.STRING },
                         tasks: { type: Type.ARRAY, items: { type: Type.STRING } }
                     }
@@ -245,8 +347,9 @@ export const generateOnboardingData = async (
         return JSON.parse(cleanedText);
     } catch (e) {
         return {
-            welcomeMessage: "Welcome to the team!",
-            tasks: ["Submit your first player", "Watch the intro video", "Scout a local game"]
+            scoutPersona: "The Scout",
+            welcomeMessage: "Welcome to the team! Let's find some talent.",
+            tasks: ["Check your existing contact lists", "Review past game footage", "Scout a local match"]
         };
     }
 };
@@ -254,7 +357,13 @@ export const generateOnboardingData = async (
 // 4. Q&A
 export const askScoutAI = async (question: string): Promise<string> => {
     const ai = getAiClient();
-    const prompt = `You are a helpful expert mentor for soccer scouts. Answer this question concisely: ${question}`;
+    const prompt = `
+      You are a helpful expert mentor for soccer scouts at WARUBI. 
+      Answer the question below.
+      If the question provides a specific Persona/Role context, assume that persona and answer accordingly.
+      
+      Question/Context: ${question}
+    `;
     
     try {
         const response = await ai.models.generateContent({
