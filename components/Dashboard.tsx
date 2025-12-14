@@ -16,9 +16,10 @@ interface DashboardProps {
   user: UserProfile;
   players: Player[];
   onAddPlayer: (player: Player) => void;
+  onUpdateProfile?: (profile: UserProfile) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, onAddPlayer }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, onAddPlayer, onUpdateProfile }) => {
   const [activeTab, setActiveTab] = useState<DashboardTab>(DashboardTab.PLAYERS);
   const [events, setEvents] = useState<ScoutingEvent[]>([]);
   const [isSubmissionOpen, setIsSubmissionOpen] = useState(false);
@@ -73,6 +74,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, on
               placedLocation: newStatus === PlayerStatus.PLACED && extraData ? extraData : p.placedLocation
           };
       }));
+  };
+
+  const handleUpdateNotes = (id: string, notes: string) => {
+      setPlayers(prev => prev.map(p => 
+          p.id === id ? { ...p, notes } : p
+      ));
   };
 
   const handleMessageSent = (id: string, log: Omit<OutreachLog, 'id'>) => {
@@ -589,6 +596,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, on
                                         onOutreach={jumpToOutreach}
                                         onDragStart={handleDragStart}
                                         onDragEnd={handleDragEnd}
+                                        onUpdateNotes={handleUpdateNotes}
                                     />
                                 ))}
                                 {filteredPlayers.filter(p => p.status === PlayerStatus.LEAD).length === 0 && (
@@ -618,6 +626,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, on
                                         onOutreach={jumpToOutreach} 
                                         onDragStart={handleDragStart}
                                         onDragEnd={handleDragEnd}
+                                        onUpdateNotes={handleUpdateNotes}
                                     />
                                 ))}
                             </PipelineColumn>
@@ -631,6 +640,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, on
                                         onOutreach={jumpToOutreach} 
                                         onDragStart={handleDragStart}
                                         onDragEnd={handleDragEnd}
+                                        onUpdateNotes={handleUpdateNotes}
                                     />
                                 ))}
                             </PipelineColumn>
@@ -644,6 +654,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, on
                                         onOutreach={jumpToOutreach} 
                                         onDragStart={handleDragStart}
                                         onDragEnd={handleDragEnd}
+                                        onUpdateNotes={handleUpdateNotes}
                                     />
                                 ))}
                             </PipelineColumn>
@@ -657,6 +668,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, on
                                         onOutreach={jumpToOutreach} 
                                         onDragStart={handleDragStart}
                                         onDragEnd={handleDragEnd}
+                                        onUpdateNotes={handleUpdateNotes}
                                     />
                                 ))}
                             </PipelineColumn>
@@ -818,7 +830,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, players: initialPlayers, on
 
             {activeTab === DashboardTab.PROFILE && (
                 <div className="animate-fade-in">
-                    <ProfileTab user={user} players={players} events={events} />
+                    <ProfileTab user={user} players={players} events={events} onUpdateUser={onUpdateProfile} />
                 </div>
             )}
             

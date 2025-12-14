@@ -112,7 +112,7 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({ user }) => {
     // --- HELPER COMPONENTS ---
 
     // 1. PATHWAY CARD
-    const PathwayCard = ({ pathway }: { pathway: PathwayDef }) => {
+    const PathwayCard: React.FC<{ pathway: PathwayDef }> = ({ pathway }) => {
         const Icon = getIcon(pathway.icon);
         return (
             <div 
@@ -134,7 +134,7 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({ user }) => {
     };
 
     // 2. TOOL CARD
-    const ToolCard = ({ tool }: { tool: any }) => (
+    const ToolCard: React.FC<{ tool: any }> = ({ tool }) => (
         <div className="bg-scout-900/50 border border-scout-700 rounded-lg p-4 hover:border-scout-accent transition-colors flex flex-col justify-between">
             <div className="mb-3">
                 <div className="flex justify-between items-start mb-1">

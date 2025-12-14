@@ -20,6 +20,10 @@ const App: React.FC = () => {
     setPlayers(prev => [player, ...prev]);
   };
 
+  const handleUpdateProfile = (updatedProfile: UserProfile) => {
+      setUserProfile(updatedProfile);
+  };
+
   return (
     <>
       {view === AppView.ONBOARDING && (
@@ -31,6 +35,7 @@ const App: React.FC = () => {
             user={userProfile} 
             players={players} 
             onAddPlayer={handleAddPlayer}
+            onUpdateProfile={handleUpdateProfile}
         />
       )}
     </>

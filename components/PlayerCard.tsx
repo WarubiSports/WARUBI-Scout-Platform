@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Player, PlayerStatus } from '../types';
-import { TrendingUp, AlertTriangle, CheckCircle, MessageCircle, ChevronDown, ChevronUp, MapPin, School, Compass, Send, GripVertical, Flame, Eye } from 'lucide-react';
+import { TrendingUp, AlertTriangle, CheckCircle, MessageCircle, ChevronDown, ChevronUp, MapPin, School, Compass, Send, GripVertical, Flame, Eye, StickyNote, Save, X } from 'lucide-react';
 
 interface PlayerCardProps {
   player: Player;
   onStatusChange?: (id: string, newStatus: PlayerStatus, extraData?: string) => void;
   onOutreach?: (player: Player) => void;
+  onUpdateNotes?: (id: string, notes: string) => void;
   isReference?: boolean;
   onDragStart?: (id: string) => void;
   onDragEnd?: () => void;
@@ -15,13 +16,15 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
   player, 
   onStatusChange, 
   onOutreach, 
+  onUpdateNotes,
   isReference = false,
   onDragStart,
   onDragEnd
 }) => {
   const [extraInput, setExtraInput] = useState(player.interestedProgram || player.placedLocation || '');
   const [isEditing, setIsEditing] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState<'none' | 'analysis' | 'notes'>('none');
+  const [noteContent, setNoteContent] = useState(player.notes || '');
 
   const scoreColor = (score: number) => {
     if (score >= 85) return 'text-scout-accent';
@@ -46,6 +49,13 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
       setIsEditing(false);
   }
 
+  const saveNotes = () => {
+      if (!onUpdateNotes) return;
+      onUpdateNotes(player.id, noteContent);
+      // Optional: Close tab or keep open? Keep open for now to confirm save visually (or could close)
+      // setActiveTab('none'); 
+  };
+
   const sendFinalReviewEmail = () => {
     const subject = `Final Review Candidate: ${player.name}`;
     const body = `Hi Scouting Team,
@@ -60,6 +70,9 @@ Player Details:
 
 Summary:
 ${player.evaluation?.summary || 'N/A'}
+
+Notes:
+${player.notes || 'N/A'}
 
 Please advise on next steps.`;
 
@@ -81,6 +94,14 @@ Please advise on next steps.`;
       if (!player.lastActive) return false;
       const diff = new Date().getTime() - new Date(player.lastActive).getTime();
       return diff < 1000 * 60 * 60; // 1 hour
+  };
+
+  const toggleTab = (tab: 'analysis' | 'notes') => {
+      if (activeTab === tab) {
+          setActiveTab('none');
+      } else {
+          setActiveTab(tab);
+      }
   };
 
   return (
@@ -203,59 +224,93 @@ Please advise on next steps.`;
             </div>
         )}
 
-        {/* Collapsible Evaluation Details */}
-        {player.evaluation && (
-            <div className="mt-auto pt-1">
+        {/* Tab Toggle Row */}
+        <div className="mt-auto pt-2 flex border-t border-scout-700/50 divide-x divide-scout-700/50">
+            {player.evaluation && (
                  <button
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    className="w-full flex items-center justify-center gap-1 text-[9px] uppercase font-bold text-gray-500 hover:text-white py-1 transition-colors border-t border-scout-700/50"
+                    onClick={() => toggleTab('analysis')}
+                    className={`flex-1 flex items-center justify-center gap-1 text-[9px] uppercase font-bold py-1 transition-colors ${activeTab === 'analysis' ? 'text-white bg-scout-700/50' : 'text-gray-500 hover:text-white'}`}
                 >
-                    {isExpanded ? 'Hide Analysis' : 'Show Analysis'}
-                    {isExpanded ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
+                    Analysis {activeTab === 'analysis' ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
                 </button>
+            )}
+             <button
+                onClick={() => toggleTab('notes')}
+                className={`flex-1 flex items-center justify-center gap-1 text-[9px] uppercase font-bold py-1 transition-colors ${activeTab === 'notes' ? 'text-white bg-scout-700/50' : 'text-gray-500 hover:text-white'}`}
+            >
+                {player.notes ? <StickyNote size={10} className="text-scout-highlight"/> : <StickyNote size={10} />}
+                {player.notes ? 'Edit Note' : 'Add Note'}
+            </button>
+        </div>
 
-                {isExpanded && (
-                    <div className="animate-fade-in space-y-2 mt-1">
-                        {/* Pathways Tags */}
-                        {player.evaluation.recommendedPathways && player.evaluation.recommendedPathways.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mb-1">
-                                {player.evaluation.recommendedPathways.map((path, idx) => (
-                                    <span key={idx} className={`text-[9px] font-medium px-1.5 py-0.5 rounded border flex items-center gap-1 ${getPathwayStyle(path)}`}>
-                                        <Compass size={8} /> {path}
-                                    </span>
-                                ))}
-                            </div>
-                        )}
-
-                        <div className="bg-scout-900/50 p-2 rounded border border-scout-700/50">
-                            <div className="flex items-center gap-1.5 mb-0.5 text-scout-accent text-xs font-semibold">
-                                <TrendingUp size={12} /> College Projection
-                            </div>
-                            <p className="text-xs text-gray-300">{player.evaluation.collegeLevel}</p>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 text-[10px]">
-                            <div>
-                                <p className="text-gray-500 mb-0.5 flex items-center gap-1"><CheckCircle size={8} /> Strengths</p>
-                                <ul className="list-disc list-inside text-gray-300 leading-tight">
-                                    {(player.evaluation.strengths || []).slice(0, 2).map((s, i) => <li key={i} className="truncate">{s}</li>)}
-                                </ul>
-                            </div>
-                            <div>
-                                <p className="text-gray-500 mb-0.5 flex items-center gap-1"><AlertTriangle size={8} /> Focus Areas</p>
-                                <ul className="list-disc list-inside text-gray-300 leading-tight">
-                                    {(player.evaluation.weaknesses || []).slice(0, 2).map((w, i) => <li key={i} className="truncate">{w}</li>)}
-                                </ul>
-                            </div>
-                        </div>
-                        
-                        <div className="pt-1 border-t border-scout-700 mt-1">
-                            <p className="text-[10px] text-gray-400 italic line-clamp-2">"{player.evaluation.summary}"</p>
-                        </div>
+        {/* Expanded Content: Analysis */}
+        {activeTab === 'analysis' && player.evaluation && (
+            <div className="animate-fade-in space-y-2 mt-2 border-t border-scout-700 pt-2">
+                {/* Pathways Tags */}
+                {player.evaluation.recommendedPathways && player.evaluation.recommendedPathways.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-1">
+                        {player.evaluation.recommendedPathways.map((path, idx) => (
+                            <span key={idx} className={`text-[9px] font-medium px-1.5 py-0.5 rounded border flex items-center gap-1 ${getPathwayStyle(path)}`}>
+                                <Compass size={8} /> {path}
+                            </span>
+                        ))}
                     </div>
                 )}
+
+                <div className="bg-scout-900/50 p-2 rounded border border-scout-700/50">
+                    <div className="flex items-center gap-1.5 mb-0.5 text-scout-accent text-xs font-semibold">
+                        <TrendingUp size={12} /> College Projection
+                    </div>
+                    <p className="text-xs text-gray-300">{player.evaluation.collegeLevel}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                    <div>
+                        <p className="text-gray-500 mb-0.5 flex items-center gap-1"><CheckCircle size={8} /> Strengths</p>
+                        <ul className="list-disc list-inside text-gray-300 leading-tight">
+                            {(player.evaluation.strengths || []).slice(0, 2).map((s, i) => <li key={i} className="truncate">{s}</li>)}
+                        </ul>
+                    </div>
+                    <div>
+                        <p className="text-gray-500 mb-0.5 flex items-center gap-1"><AlertTriangle size={8} /> Focus Areas</p>
+                        <ul className="list-disc list-inside text-gray-300 leading-tight">
+                            {(player.evaluation.weaknesses || []).slice(0, 2).map((w, i) => <li key={i} className="truncate">{w}</li>)}
+                        </ul>
+                    </div>
+                </div>
+                
+                <div className="pt-1 mt-1">
+                    <p className="text-[10px] text-gray-400 italic line-clamp-2">"{player.evaluation.summary}"</p>
+                </div>
             </div>
         )}
+
+        {/* Expanded Content: Notes */}
+        {activeTab === 'notes' && (
+             <div className="animate-fade-in mt-2 border-t border-scout-700 pt-2">
+                 <textarea
+                    value={noteContent}
+                    onChange={(e) => setNoteContent(e.target.value)}
+                    className="w-full bg-scout-900 border border-scout-600 rounded p-2 text-xs text-white focus:outline-none focus:border-scout-accent resize-none h-24 mb-2"
+                    placeholder="Add private notes about this player (e.g. Injury history, family context, budget...)"
+                 />
+                 <div className="flex gap-2">
+                     <button 
+                        onClick={saveNotes}
+                        className="flex-1 bg-scout-accent hover:bg-emerald-600 text-white text-[10px] font-bold py-1.5 rounded flex items-center justify-center gap-1 transition-colors"
+                     >
+                        <Save size={10} /> Save Note
+                     </button>
+                      <button 
+                        onClick={() => { setNoteContent(player.notes || ''); setActiveTab('none'); }}
+                        className="bg-scout-700 hover:bg-scout-600 text-gray-300 text-[10px] font-bold py-1.5 px-3 rounded transition-colors"
+                     >
+                        Cancel
+                     </button>
+                 </div>
+             </div>
+        )}
+
       </div>
 
       {/* Action Footer */}

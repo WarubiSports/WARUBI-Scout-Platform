@@ -1,4 +1,5 @@
 
+
 export enum AppView {
   ONBOARDING = 'ONBOARDING',
   DASHBOARD = 'DASHBOARD'
@@ -31,6 +32,11 @@ export interface UserProfile {
   scoutPersona?: string; // e.g. "The Networker", "The Data Analyst", "The Field General"
   weeklyTasks: string[]; // These will now be "Power Moves"
   scoutId?: string; // Unique ID for tracking referrals
+  
+  // Extended Profile Fields (LinkedIn Style)
+  bio?: string;
+  experience?: { id: string; role: string; org: string; duration: string }[];
+  certifications?: string[];
 }
 
 export interface PlayerEvaluation {
@@ -68,6 +74,7 @@ export interface Player {
   placedLocation?: string;    // e.g. "Signed with FC Dallas"
   evaluation: PlayerEvaluation | null;
   outreachLogs: OutreachLog[];
+  notes?: string; // Free-text notes
   submittedAt: string;
 
   // Smart Tracking Fields
@@ -79,7 +86,8 @@ export type EventStatus = 'Draft' | 'Pending Approval' | 'Approved' | 'Published
 
 export interface ScoutingEvent {
   id: string;
-  isMine: boolean; // True if hosting, False if attending/viewing
+  isMine: boolean; // True if hosting, False if attending/viewing (Legacy/Helper)
+  role?: 'HOST' | 'ATTENDEE'; // Explicit role
   status: EventStatus;
   title: string;
   date: string;
@@ -90,7 +98,7 @@ export interface ScoutingEvent {
   // AI Generated Assets (Only for hosted events)
   marketingCopy?: string;
   agenda?: string[];
-  checklist?: string[];
+  checklist?: { task: string; completed: boolean }[];
   
   // Stats
   registeredCount: number;

@@ -345,7 +345,7 @@ export const generateEventPlan = async (
     date: string,
     type: string,
     fee: string
-): Promise<{ agenda: string[], marketingCopy: string, checklist: string[] }> => {
+): Promise<{ agenda: string[], marketingCopy: string, checklist: { task: string, completed: boolean }[] }> => {
     const ai = getAiClient();
     const prompt = `
         You are an event planner for WARUBI Sports.
@@ -359,9 +359,17 @@ export const generateEventPlan = async (
         - Cost: ${fee}
         
         Generate 3 things:
-        1. 'marketingCopy': A short, exciting blurb (with emojis) suitable for WhatsApp/Instagram to recruit players. Mention the date, location, and that spots are limited.
-        2. 'agenda': A 4-5 item timeline (e.g., 9:00 AM Check-in, 10:00 AM Matches).
-        3. 'checklist': 5 critical tasks the scout must do before the event (e.g., Book field, Print rosters).
+        1. 'marketingCopy': A professional, exciting (but NOT aggressive) blurb suitable for WhatsApp/Instagram. 
+           - Tone: Professional, welcoming, opportunity-focused.
+           - Key Message: Focus on "Pathways to College Soccer, Europe, and Semi-Pro". 
+           - Avoid: Do not use aggressive "sales" language like "Dream of being a pro" or "Make it big". Keep it grounded and professional.
+           - Include: Mention date, location, and that spots are limited.
+        
+        2. 'agenda': A 5-6 item timeline. 
+           - REQUIRED: You MUST include a "Pathway Presentation (Players & Families)" session. Specify that it should be in a classroom/conference room with internet access.
+           - Typical flow: Arrival -> Presentation -> Warmup -> Games/Drills -> Closing.
+
+        3. 'checklist': 5 critical tasks the scout must do before the event (e.g., Book field, Print rosters, Test Wifi for presentation).
         
         Return strict JSON.
     `;
@@ -386,18 +394,30 @@ export const generateEventPlan = async (
         const cleanedText = cleanJson(text);
         const parsed = JSON.parse(cleanedText);
         
-        // Defensive checks
+        // Defensive checks & formatting checklist
+        const rawChecklist = Array.isArray(parsed.checklist) ? parsed.checklist : ["Secure Field", "Print Rosters"];
+        const formattedChecklist = rawChecklist.map((task: string) => ({
+            task: task,
+            completed: false
+        }));
+
         return {
-            agenda: Array.isArray(parsed.agenda) ? parsed.agenda : ["09:00 AM - Arrival", "10:00 AM - Kickoff"],
-            marketingCopy: parsed.marketingCopy || `Join us for ${title}! ⚽️\n📍 ${location}\n📅 ${date}\nSign up now!`,
-            checklist: Array.isArray(parsed.checklist) ? parsed.checklist : ["Bring Balls", "Bring Bibs"]
+            agenda: Array.isArray(parsed.agenda) ? parsed.agenda : ["09:00 AM - Arrival", "10:00 AM - Pathway Presentation", "11:00 AM - Matches"],
+            marketingCopy: parsed.marketingCopy || `Join us for ${title}! ⚽️\n📍 ${location}\n📅 ${date}\nDiscover your pathway to college or pro soccer.`,
+            checklist: formattedChecklist
         };
     } catch (e) {
         console.error("Event Gen Error", e);
         return {
-            agenda: ["10:00 AM - Arrival", "10:30 AM - Warmup", "11:00 AM - Matches", "13:00 PM - Closing"],
-            marketingCopy: `🔥 Upcoming WARUBI Event: ${title}\n📍 ${location}\n📅 ${date}\n💰 ${fee}\n\nDon't miss your chance to get scouted! Reply to register.`,
-            checklist: ["Confirm Field Booking", "Notify Staff", "Prepare Bibs & Balls", "Print Player Check-in List", "Bring Water"]
+            agenda: ["10:00 AM - Arrival", "10:30 AM - Pathway Presentation (Classroom)", "11:30 AM - Warmup", "12:00 PM - Matches", "14:00 PM - Closing"],
+            marketingCopy: `⚽️ Upcoming Opportunity: ${title}\n\nJoin us at ${location} on ${date} for a professional Talent ID event.\n\nWe will be evaluating players for:\n✅ US College Scholarships\n✅ European Development Pathways\n✅ Semi-Pro Opportunities\n\nSpots are limited. Register now to secure your evaluation.`,
+            checklist: [
+                { task: "Confirm Field Booking", completed: false },
+                { task: "Prepare Conference Room for Presentation", completed: false },
+                { task: "Print Player Check-in List", completed: false },
+                { task: "Check Wifi Connection", completed: false },
+                { task: "Send Reminder Email to Players", completed: false }
+            ]
         };
     }
 };
@@ -652,4 +672,40 @@ export const extractPlayersFromBulkData = async (
       console.error("Bulk extraction failed", error);
       return [];
   }
+};
+
+// 7. Draft Scout Bio
+export const draftScoutBio = async (profileData: Partial<UserProfile>): Promise<string> => {
+    const ai = getAiClient();
+    
+    // Construct experience string
+    const expString = profileData.experience 
+        ? profileData.experience.map(e => `${e.role} at ${e.org} (${e.duration})`).join(', ') 
+        : 'None specified';
+
+    const prompt = `
+        You are a professional LinkedIn profile writer specializing in sports and scouting.
+        Write a concise, professional bio (approx 3-4 sentences) for a soccer scout using this info:
+        
+        Name: ${profileData.name}
+        Current Role: ${profileData.role}
+        Region: ${profileData.region}
+        Affiliation: ${profileData.affiliation || 'Independent'}
+        Past Experience: ${expString}
+        
+        Tone: Authoritative, experienced, trustworthy. 
+        Focus on their eye for talent and network.
+        
+        Return ONLY the bio text.
+    `;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt
+        });
+        return response.text?.trim() || "";
+    } catch (e) {
+        return "Professional scout with experience in identifying talent and player development.";
+    }
 };

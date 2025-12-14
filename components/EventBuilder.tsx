@@ -266,7 +266,8 @@ const EventBuilder: React.FC<EventBuilderProps> = ({ events, onAddEvent }) => {
                                         <ul className="space-y-1">
                                             {(evt.checklist || []).slice(0, 3).map((item, idx) => (
                                                 <li key={idx} className="flex items-center gap-2 text-gray-400">
-                                                    <span className="w-1 h-1 bg-gray-500 rounded-full"></span> {item}
+                                                    <span className={`w-2 h-2 rounded-full ${item.completed ? 'bg-scout-accent' : 'bg-gray-600'}`}></span>
+                                                    <span className={item.completed ? 'line-through' : ''}>{item.task}</span>
                                                 </li>
                                             ))}
                                         </ul>
