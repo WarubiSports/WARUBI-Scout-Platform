@@ -6,14 +6,42 @@ import {
     ShieldAlert, CheckCircle2, Search, PlayCircle, Lightbulb, Zap, GraduationCap, 
     Sparkles, User, Globe, Calendar, ArrowRight, Calculator, Copy, CheckCircle, 
     Link, DollarSign, TrendingUp, HelpCircle, X, Award, Ruler, Activity, Scale, 
-    Anchor, HeartHandshake, AlertTriangle, ShieldCheck, ExternalLink, Lock,
-    RefreshCw, Info
+    Anchor, HeartHandshake, AlertTriangle, ShieldCheck, ExternalLink, Lock, Footprints, Info,
+    Timer, Dumbbell, Target, Trophy
 } from 'lucide-react';
 import { UserProfile, PathwayDef, Player } from '../types';
 
 interface KnowledgeTabProps {
     user?: UserProfile;
 }
+
+// HARDCODED MEASURABLE BENCHMARKS FOR THE UI
+const TIER_BENCHMARKS: Record<string, any> = {
+    'Tier 1': {
+        leagues: ['MLS Next', 'ECNL (National Playoffs)', 'Intl. Pro Academy'],
+        awards: ['Youth National Team', 'All-American', 'Regional Selection'],
+        physical: 'Top 1% Speed/Agility. Pro-ready frame.',
+        technical: 'Flawless first touch under high pressure. Two-footed.',
+        gpa: '3.0+ (Required for Ivies/Stanford)',
+        video: 'Must have full match footage against high-level opposition.'
+    },
+    'Tier 2': {
+        leagues: ['ECNL', 'GA', 'High Level Varsity (State Champs)', 'NPL'],
+        awards: ['All-State', 'All-Conference', 'Team Captain'],
+        physical: 'Above average fitness. Can play 90mins at high tempo.',
+        technical: 'Strong basics. Can execute tactic specific roles consistently.',
+        gpa: '3.0+ (Opens up academic scholarship money)',
+        video: 'Highlight reel + 1 full match.'
+    },
+    'Tier 3': {
+        leagues: ['Regional Leagues', 'HS Varsity', 'Local Club'],
+        awards: ['All-District', 'Local Club Awards'],
+        physical: 'Average to Good. May need Strength & Conditioning program.',
+        technical: 'Good moments, but inconsistent under pressure.',
+        gpa: '2.5+ (Eligibility minimum)',
+        video: 'Highlight reel is mandatory to get noticed.'
+    }
+};
 
 const KnowledgeTab: React.FC<KnowledgeTabProps> = ({ user }) => {
     // Navigation State
@@ -645,6 +673,36 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({ user }) => {
                             </div>
                         </div>
 
+                        {/* SECTION: 4 STEPS RECRUITING GUIDE */}
+                        <div className="bg-scout-900 border border-scout-700 rounded-xl p-6 relative overflow-hidden group hover:border-scout-600 transition-colors">
+                            <div className="flex items-center gap-2 mb-6">
+                                <div className="p-2 bg-scout-accent/10 rounded-lg text-scout-accent">
+                                    <Footprints size={20} />
+                                </div>
+                                <h3 className="text-lg font-bold text-white">The Scouting Process</h3>
+                            </div>
+                            
+                            <div className="grid grid-cols-4 gap-4 relative">
+                                {/* Connecting Line */}
+                                <div className="absolute top-[20px] left-0 w-full h-0.5 bg-scout-700 hidden md:block -z-10"></div>
+
+                                {[
+                                    { step: 1, title: 'Identify', desc: 'Find talent at events or online.', icon: Search },
+                                    { step: 2, title: 'Evaluate', desc: 'Use AI tools to tier the player.', icon: BarChart3 },
+                                    { step: 3, title: 'Connect', desc: 'Send outreach & build trust.', icon: MessageSquare },
+                                    { step: 4, title: 'Place', desc: 'Secure the contract or scholarship.', icon: CheckCircle2 }
+                                ].map((item, i) => (
+                                    <div key={i} className="flex flex-col items-center text-center">
+                                        <div className="w-10 h-10 rounded-full bg-scout-800 border-2 border-scout-600 flex items-center justify-center text-gray-400 mb-3 z-10 group-hover:border-scout-accent transition-colors shadow-lg">
+                                            <item.icon size={18} />
+                                        </div>
+                                        <h4 className="text-sm font-bold text-white mb-1">{item.title}</h4>
+                                        <p className="text-[10px] text-gray-400 max-w-[120px] hidden md:block leading-tight">{item.desc}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
                          {/* SECTION 2: TOOLBOX */}
                         <div>
                             <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
@@ -670,7 +728,7 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({ user }) => {
                                      >
                                          <div className="w-10 h-10 rounded-full bg-scout-800 flex items-center justify-center font-bold text-white border border-scout-600 group-hover:border-scout-accent">{p.name.charAt(0)}</div>
                                          <div>
-                                             <div className="text-sm font-bold text-white group-hover:text-scout-accent">{p.name}</div>
+                                             <div className="text-sm font-bold text-white group-hover:text-scout-accent truncate max-w-[140px]">{p.name}</div>
                                              <div className="text-[10px] text-gray-400">{p.evaluation?.scholarshipTier}</div>
                                          </div>
                                      </button>
@@ -736,13 +794,14 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({ user }) => {
                     </div>
                 )}
 
-                {/* --- REFERENCE DETAIL VIEW --- */}
+                {/* --- REFERENCE DETAIL VIEW (REDESIGNED) --- */}
                 {view === 'REF_DETAIL' && selectedRefPlayer && (
                     <div className="animate-fade-in space-y-6">
                          <button onClick={() => setView('HOME')} className="text-gray-400 hover:text-white flex items-center gap-1 text-sm mb-2">
                             <X size={16} /> Back to Hub
                         </button>
 
+                        {/* Top Summary Card */}
                         <div className="bg-gradient-to-br from-scout-800 to-scout-900 border border-scout-600 rounded-xl p-8 relative overflow-hidden shadow-2xl">
                              <div className="absolute top-0 right-0 w-64 h-64 bg-scout-accent/10 rounded-full blur-3xl -z-10"></div>
                              
@@ -752,9 +811,9 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({ user }) => {
                                          {selectedRefPlayer.name.charAt(0)}
                                      </div>
                                      <div>
-                                         <span className="text-scout-accent font-bold text-sm uppercase tracking-wider mb-1 block">Reference Standard</span>
+                                         <span className="text-scout-accent font-bold text-sm uppercase tracking-wider mb-1 block">The Benchmark</span>
                                          <h2 className="text-3xl font-black text-white leading-tight">{selectedRefPlayer.name}</h2>
-                                         <p className="text-gray-400">{selectedRefPlayer.position} • {selectedRefPlayer.age} Years Old</p>
+                                         <p className="text-gray-400">{selectedRefPlayer.evaluation?.collegeLevel}</p>
                                      </div>
                                 </div>
                                 <div className="text-right">
@@ -764,42 +823,92 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({ user }) => {
                                     </div>
                                 </div>
                              </div>
-
-                             <div className="grid md:grid-cols-2 gap-8">
-                                 <div>
-                                     <h3 className="font-bold text-white mb-3 flex items-center gap-2">
-                                         <Award size={18} className="text-scout-highlight"/> The Standard
-                                     </h3>
-                                     <p className="text-gray-300 text-sm leading-relaxed mb-4">
-                                         {selectedRefPlayer.evaluation?.summary}
-                                     </p>
-                                     <div className="bg-scout-900/50 p-4 rounded-lg border border-scout-700/50">
-                                         <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">Projected Level</h4>
-                                         <p className="text-white font-medium">{selectedRefPlayer.evaluation?.collegeLevel}</p>
-                                     </div>
-                                 </div>
-                                 
-                                 <div>
-                                      <h3 className="font-bold text-white mb-3 flex items-center gap-2">
-                                         <Activity size={18} className="text-green-400"/> Key Attributes
-                                     </h3>
-                                     <ul className="space-y-2">
-                                         {(selectedRefPlayer.evaluation?.strengths || []).map((s, i) => (
-                                             <li key={i} className="flex items-center gap-2 text-sm text-gray-300">
-                                                 <CheckCircle size={14} className="text-green-500" /> {s}
-                                             </li>
-                                         ))}
-                                     </ul>
-
-                                     <button 
-                                        onClick={(e) => handleAskAI(e, `Compare my player to ${selectedRefPlayer.name}. What specific traits make them a ${selectedRefPlayer.evaluation?.scholarshipTier}?`)}
-                                        className="mt-6 w-full bg-scout-700 hover:bg-scout-600 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all border border-scout-600"
-                                     >
-                                         <Ruler size={18} /> Ask AI: Measure My Player
-                                     </button>
-                                 </div>
-                             </div>
+                             
+                             <p className="text-gray-300 text-sm leading-relaxed mb-4 max-w-2xl bg-scout-900/50 p-4 rounded-lg border border-scout-700/50 italic">
+                                 "{selectedRefPlayer.evaluation?.summary}"
+                             </p>
                         </div>
+
+                        {/* Measurable Criteria Grid */}
+                        <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                            <Ruler size={20} className="text-scout-highlight" /> Measurable Benchmarks
+                        </h3>
+                        
+                        {selectedRefPlayer.evaluation?.scholarshipTier && TIER_BENCHMARKS[selectedRefPlayer.evaluation.scholarshipTier] ? (
+                            <div className="grid md:grid-cols-2 gap-6">
+                                {/* Competition Level */}
+                                <div className="bg-scout-800 p-6 rounded-xl border border-scout-700">
+                                    <h4 className="font-bold text-white mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
+                                        <Trophy size={16} className="text-yellow-400"/> Competition Level
+                                    </h4>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <p className="text-xs text-gray-500 font-bold uppercase mb-1">Required Leagues</p>
+                                            <ul className="space-y-1">
+                                                {TIER_BENCHMARKS[selectedRefPlayer.evaluation.scholarshipTier].leagues.map((l: string, i: number) => (
+                                                    <li key={i} className="flex items-center gap-2 text-sm text-gray-300">
+                                                        <CheckCircle size={12} className="text-green-500" /> {l}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500 font-bold uppercase mb-1">Expected Awards/Honors</p>
+                                            <p className="text-sm text-gray-300">{TIER_BENCHMARKS[selectedRefPlayer.evaluation.scholarshipTier].awards.join(', ')}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Physical & Technical */}
+                                <div className="space-y-4">
+                                    <div className="bg-scout-800 p-4 rounded-xl border border-scout-700">
+                                        <h4 className="font-bold text-white mb-2 flex items-center gap-2 text-sm uppercase tracking-wider">
+                                            <Dumbbell size={16} className="text-blue-400"/> Physical Standard
+                                        </h4>
+                                        <p className="text-sm text-gray-300">
+                                            {TIER_BENCHMARKS[selectedRefPlayer.evaluation.scholarshipTier].physical}
+                                        </p>
+                                    </div>
+                                    <div className="bg-scout-800 p-4 rounded-xl border border-scout-700">
+                                        <h4 className="font-bold text-white mb-2 flex items-center gap-2 text-sm uppercase tracking-wider">
+                                            <Target size={16} className="text-red-400"/> Technical Standard
+                                        </h4>
+                                        <p className="text-sm text-gray-300">
+                                            {TIER_BENCHMARKS[selectedRefPlayer.evaluation.scholarshipTier].technical}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Academics & Video */}
+                                <div className="bg-scout-800 p-6 rounded-xl border border-scout-700 md:col-span-2 grid md:grid-cols-2 gap-6">
+                                     <div>
+                                        <h4 className="font-bold text-white mb-2 flex items-center gap-2 text-sm uppercase tracking-wider">
+                                            <GraduationCap size={16} className="text-purple-400"/> Academic Minimum
+                                        </h4>
+                                        <p className="text-sm text-gray-300">
+                                            {TIER_BENCHMARKS[selectedRefPlayer.evaluation.scholarshipTier].gpa}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-white mb-2 flex items-center gap-2 text-sm uppercase tracking-wider">
+                                            <Timer size={16} className="text-orange-400"/> Video Requirement
+                                        </h4>
+                                        <p className="text-sm text-gray-300">
+                                            {TIER_BENCHMARKS[selectedRefPlayer.evaluation.scholarshipTier].video}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center text-gray-500 py-10">Select a specific tier to see benchmarks.</div>
+                        )}
+
+                        <button 
+                            onClick={(e) => handleAskAI(e, `My player is in ${TIER_BENCHMARKS[selectedRefPlayer.evaluation?.scholarshipTier || 'Tier 3'].leagues[0]} but hasn't won any awards. Are they still ${selectedRefPlayer.evaluation?.scholarshipTier}?`)}
+                            className="mt-4 w-full bg-scout-700 hover:bg-scout-600 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all border border-scout-600"
+                        >
+                            <Sparkles size={18} /> Ask AI: Do they fit this tier?
+                        </button>
                     </div>
                 )}
 

@@ -4,11 +4,11 @@ import { Player, PlayerStatus, KnowledgeItem, PathwayDef, ToolDef } from './type
 export const ITP_REFERENCE_PLAYERS: Player[] = [
   {
     id: 'ref-1',
-    name: 'Julian Brandt (Ref)',
-    age: 19,
-    position: 'CAM',
+    name: 'Tier 1: The Academy Pro',
+    age: 18,
+    position: 'Standard',
     status: PlayerStatus.PLACED,
-    placedLocation: 'Professional Contract',
+    placedLocation: 'Pro Contract / Top 25 D1',
     submittedAt: new Date().toISOString(),
     outreachLogs: [],
     evaluation: {
@@ -16,49 +16,49 @@ export const ITP_REFERENCE_PLAYERS: Player[] = [
       collegeLevel: 'Pro / Top D1',
       scholarshipTier: 'Tier 1',
       recommendedPathways: ['Development in Europe'],
-      strengths: ['Elite Vision', 'Technical Dribbling', 'Game Intelligence'],
-      weaknesses: ['Defensive Workrate'],
+      strengths: ['League: MLS Next / ECNL / Bundsliga', 'Honors: Youth National Team / All-American', 'Physical: Top 1% Athlete'],
+      weaknesses: [],
       nextAction: 'Finalize Contract',
-      summary: 'The Gold Standard for the European Pathway. Immediate impact player.'
+      summary: 'The "Blue Chip" recruit. Plays at the highest youth level available. Physically dominant or technically flawless under high pressure.'
     }
   },
   {
     id: 'ref-2',
-    name: 'Jordan Morris (Ref)',
+    name: 'Tier 2: The College Starter',
     age: 18,
-    position: 'ST',
+    position: 'Standard',
     status: PlayerStatus.PLACED,
-    interestedProgram: 'Stanford',
+    interestedProgram: 'NCAA D1 / D2',
     submittedAt: new Date().toISOString(),
     outreachLogs: [],
     evaluation: {
-      score: 89,
-      collegeLevel: 'NCAA D1 Top 25',
-      scholarshipTier: 'Tier 1',
+      score: 85,
+      collegeLevel: 'NCAA D1 / Top D2',
+      scholarshipTier: 'Tier 2',
       recommendedPathways: ['College Pathway'],
-      strengths: ['Elite Speed', 'Physicality', 'Finishing'],
-      weaknesses: ['Technical Consistency'],
+      strengths: ['League: ECNL / GA / Varsity Captain', 'Honors: All-State / All-Conference', 'Academics: 3.5+ GPA'],
+      weaknesses: [],
       nextAction: 'Commit',
-      summary: 'Perfect fit for College Pathway. High athletic ceiling, good grades.'
+      summary: 'The backbone of college soccer. Strong club pedigree, high fitness levels, and physically ready for the college game. Reliable.'
     }
   },
   {
     id: 'ref-3',
-    name: 'Local Talent (Ref)',
+    name: 'Tier 3: The Developer',
     age: 17,
-    position: 'CB',
+    position: 'Standard',
     status: PlayerStatus.INTERESTED,
     submittedAt: new Date().toISOString(),
     outreachLogs: [],
     evaluation: {
       score: 74,
-      collegeLevel: 'NCAA D2 / NAIA',
+      collegeLevel: 'NCAA D3 / NAIA / JUCO',
       scholarshipTier: 'Tier 3',
       recommendedPathways: ['Exposure Events'],
-      strengths: ['Tackling', 'Size'],
-      weaknesses: ['Speed of Play', 'Distribution'],
+      strengths: ['League: Regional / HS Varsity', 'Potential: "Late Bloomer"', 'Needs: Exposure & S&C'],
+      weaknesses: [],
       nextAction: 'Attend Showcase',
-      summary: 'Needs exposure. Good physical tools but needs to prove level at an Event.'
+      summary: 'Raw talent. Often stuck in a lower-level environment or lacks physical maturity. Needs an ID event to prove they can play higher.'
     }
   }
 ];
