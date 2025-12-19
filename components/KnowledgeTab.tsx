@@ -519,7 +519,7 @@ const KnowledgeTab: React.FC<KnowledgeTabProps> = ({ user }) => {
                                     <div onClick={() => { setSelectedToolId('transfer_val'); setView('TOOL'); }} className="bg-scout-800 border-2 border-scout-700 p-6 rounded-[2rem] flex justify-between items-center cursor-pointer hover:border-blue-500 transition-all group">
                                         <div className="flex gap-4 items-center min-w-0">
                                             <div className="p-3 bg-scout-900 rounded-2xl text-blue-400 group-hover:scale-110 transition-transform shrink-0"><TrendingUp size={24}/></div>
-                                            <div className="min-w-0"><h4 className="text-lg font-black text-white uppercase tracking-tight truncate">Transfer Portal</h4><p className="text-[10px] text-gray-500 truncate">D2 -> D1 Potential Audit.</p></div>
+                                            <div className="min-w-0"><h4 className="text-lg font-black text-white uppercase tracking-tight truncate">Transfer Portal</h4><p className="text-[10px] text-gray-500 truncate">D2 → D1 Potential Audit.</p></div>
                                         </div>
                                         <div className="text-gray-700 group-hover:text-white shrink-0 ml-2"><ChevronRight size={20}/></div>
                                     </div>
