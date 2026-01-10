@@ -245,9 +245,19 @@ const Dashboard: React.FC<DashboardProps> = ({
         }, [activePlayers.length]);
 
         if (activePlayers.length === 0) return (
-            <div className="flex flex-col items-center justify-center py-20 opacity-40">
-                <Users size={64} className="mb-4" />
-                <p className="text-lg font-black uppercase italic">Pipeline Empty</p>
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="w-20 h-20 bg-scout-800 rounded-3xl flex items-center justify-center mb-6 border border-scout-700">
+                    <Users size={40} className="text-scout-accent" />
+                </div>
+                <p className="text-xl font-black uppercase italic text-white mb-2">Start Your Pipeline</p>
+                <p className="text-sm text-gray-400 mb-6 max-w-xs">Add your first player to begin tracking prospects and building your scouting network.</p>
+                <button
+                    onClick={() => setIsSubmissionOpen(true)}
+                    className="bg-scout-accent hover:bg-emerald-600 text-scout-900 px-6 py-3 rounded-xl font-black flex items-center gap-2 transition-all active:scale-95"
+                >
+                    <PlusCircle size={20} />
+                    Add First Player
+                </button>
             </div>
         );
 
@@ -383,9 +393,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <button onClick={() => setActiveTab(DashboardTab.PLAYERS)} className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-black transition-all ${activeTab === DashboardTab.PLAYERS ? 'bg-scout-700 text-white' : 'text-gray-500 hover:bg-scout-900/50'}`}><Users size={20} /> Pipeline</button>
                     <button onClick={() => setActiveTab(DashboardTab.OUTREACH)} className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-black transition-all ${activeTab === DashboardTab.OUTREACH ? 'bg-scout-accent text-scout-900' : 'text-gray-300 hover:text-white'}`}><MessageSquare size={20} /> Outreach</button>
                     <button onClick={() => setActiveTab(DashboardTab.EVENTS)} className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-black transition-all ${activeTab === DashboardTab.EVENTS ? 'bg-scout-700 text-white' : 'text-gray-500 hover:text-gray-300'}`}><CalendarDays size={20} /> Events</button>
-                    <div className="text-[10px] font-black text-gray-600 px-5 mt-10 mb-2 uppercase tracking-[0.3em] flex items-center gap-2"><Radio size={12} /> Intel</div>
-                    <button onClick={() => setActiveTab(DashboardTab.NEWS)} className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-black transition-all ${activeTab === DashboardTab.NEWS ? 'bg-scout-700 text-white' : 'text-gray-500 hover:text-gray-300'}`}><Newspaper size={20} /> News</button>
-                    <button onClick={() => setActiveTab(DashboardTab.KNOWLEDGE)} className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-black transition-all ${activeTab === DashboardTab.KNOWLEDGE ? 'bg-scout-700 text-white' : 'text-gray-500 hover:text-gray-300'}`}><Zap size={20} /> Training</button>
+                    <div className="text-[10px] font-black text-gray-600/50 px-5 mt-10 mb-2 uppercase tracking-[0.3em] flex items-center gap-2 border-t border-scout-800 pt-4"><Radio size={10} className="opacity-50" /> Intel Hub</div>
+                    <button onClick={() => setActiveTab(DashboardTab.NEWS)} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === DashboardTab.NEWS ? 'bg-scout-700/50 text-white' : 'text-gray-600 hover:text-gray-400'}`}><Newspaper size={16} /> News</button>
+                    <button onClick={() => setActiveTab(DashboardTab.KNOWLEDGE)} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === DashboardTab.KNOWLEDGE ? 'bg-scout-700/50 text-white' : 'text-gray-600 hover:text-gray-400'}`}><Zap size={16} /> Training</button>
                 </nav>
                 <StrategyPanel persona={user.scoutPersona || 'The Scout'} tasks={strategyTasks} onAction={(link) => setActiveTab(DashboardTab.OUTREACH)} />
                 <div className="px-4 pb-2">

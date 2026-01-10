@@ -202,7 +202,7 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                             <Loader2 size={20} className="text-scout-accent animate-spin" />
                         ) : (
                             <div className={`text-2xl font-black leading-none ${scoreColor(score)}`}>
-                                {score || '?'}
+                                {score || '—'}
                             </div>
                         )}
                     </div>
@@ -274,6 +274,18 @@ const PlayerCard: React.FC<PlayerCardProps> = ({
                 >
                     <Edit2 size={10} />
                 </button>
+                {player.phone && (
+                    <a
+                        href={`https://wa.me/${player.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${player.name}, this is a scout from Warubi Sports. I noticed your talent and wanted to connect about potential opportunities.`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center justify-center gap-1 text-[9px] uppercase font-bold py-1.5 px-3 rounded-lg bg-green-600/20 text-green-400 hover:bg-green-600/40 hover:text-green-300 transition-colors"
+                        title="WhatsApp"
+                    >
+                        <MessageCircle size={10} />
+                    </a>
+                )}
                 {!isReference && (
                     <select
                         value={player.status}
