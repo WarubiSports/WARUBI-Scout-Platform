@@ -191,7 +191,7 @@ ${user.name}`);
   };
 
   return (
-    <div className="flex h-[calc(100vh-140px)] gap-6 animate-fade-in flex-col overflow-hidden">
+    <div className="flex h-full gap-6 animate-fade-in flex-col overflow-hidden relative z-0">
       
       {/* Workflow Ribbon */}
       <div className="bg-scout-800/50 border border-scout-700 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-6 shrink-0">
@@ -414,7 +414,7 @@ ${user.name}`);
         </div>
 
         {/* RIGHT: COMMAND CONSOLE */}
-        <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+        <div className="flex-1 flex flex-col gap-4 overflow-hidden relative">
             {!selectedPlayer ? (
                 <div className="flex-1 bg-scout-800/30 rounded-[3rem] border border-scout-700 border-dashed flex flex-col items-center justify-center text-center p-12 opacity-50">
                     <MousePointer size={64} className="text-gray-700 mb-6" />
@@ -469,7 +469,7 @@ ${user.name}`);
                     </div>
 
                     {/* INTENT BAR */}
-                    <div className="grid grid-cols-4 gap-3 shrink-0">
+                    <div className="grid grid-cols-4 gap-3 shrink-0 relative z-10">
                         {INTENTS.map(intent => (
                             <button 
                                 key={intent.id}
@@ -492,7 +492,7 @@ ${user.name}`);
                         </div>
 
                         {/* Terminal Header Controls */}
-                        <div className="absolute top-4 right-6 flex items-center gap-4">
+                        <div className="absolute top-4 right-6 flex items-center gap-4 z-10">
                             <div className="flex items-center gap-2 bg-scout-900/80 border border-scout-700 px-2.5 py-1 rounded-full">
                                 <Link size={10} className={includeSmartLink ? "text-scout-accent" : "text-gray-600"} />
                                 <span className="text-[8px] font-black uppercase text-gray-500 tracking-widest">Assessment Link</span>
@@ -525,7 +525,7 @@ ${user.name}`);
 
                         {/* ACTION FOOTER */}
                         {draftedMessage && !isLoading && (
-                            <div className="pt-6 flex gap-3 border-t border-scout-700 mt-4 shrink-0 bg-scout-950/80 backdrop-blur-sm">
+                            <div className="pt-6 flex gap-3 border-t border-scout-700 mt-4 shrink-0 bg-scout-950/80 backdrop-blur-sm relative z-20">
                                 <button 
                                     onClick={handleCopyAndLog}
                                     className="flex-[2] bg-white hover:bg-gray-100 text-scout-900 font-black py-3 md:py-4 rounded-xl shadow-xl transition-all flex items-center justify-center gap-2 md:gap-3 uppercase tracking-widest text-xs md:text-sm"

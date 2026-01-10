@@ -153,9 +153,11 @@ const HostGuideModal = ({ onClose }: { onClose: () => void }) => (
 const EventRow: React.FC<{ event: ScoutingEvent; isOpportunity?: boolean; isAdded?: boolean; onClick: (e: ScoutingEvent) => void; onAdd?: (e: ScoutingEvent) => void; onScan?: (e: ScoutingEvent) => void }> = ({ event, isOpportunity, isAdded, onClick, onAdd, onScan }) => {
     const isHost = event.role === 'HOST' || event.isMine;
     const dateObj = new Date(event.date);
-    
+    const endDateObj = event.endDate ? new Date(event.endDate) : null;
+    const isMultiDay = endDateObj && endDateObj.getTime() !== dateObj.getTime();
+
     return (
-        <div 
+        <div
             onClick={() => onClick(event)}
             className="group flex items-center bg-scout-800 hover:bg-scout-700/50 border border-scout-700 rounded-lg overflow-hidden transition-all cursor-pointer shadow-sm mb-2"
         >
@@ -165,7 +167,11 @@ const EventRow: React.FC<{ event: ScoutingEvent; isOpportunity?: boolean; isAdde
             {/* Date Block */}
             <div className="flex flex-col items-center justify-center px-4 py-2 min-w-[70px] border-r border-scout-700/50">
                 <span className="text-[10px] font-black uppercase tracking-tighter text-gray-500">{dateObj.toLocaleString('default', { month: 'short' })}</span>
-                <span className="text-xl font-black text-white leading-none">{dateObj.getDate() + 1}</span>
+                {isMultiDay ? (
+                    <span className="text-lg font-black text-white leading-none">{dateObj.getDate() + 1}-{endDateObj!.getDate() + 1}</span>
+                ) : (
+                    <span className="text-xl font-black text-white leading-none">{dateObj.getDate() + 1}</span>
+                )}
             </div>
 
             {/* Event Info */}
@@ -264,10 +270,10 @@ const CreateEventForm = ({ formData, setFormData, loading, handleCreate, onCance
                     />
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid md:grid-cols-3 gap-6">
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Date</label>
-                        <input 
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Start Date</label>
+                        <input
                             type="date"
                             value={formData.date}
                             onChange={e => setFormData({...formData, date: e.target.value})}
@@ -275,8 +281,18 @@ const CreateEventForm = ({ formData, setFormData, loading, handleCreate, onCance
                         />
                     </div>
                     <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">End Date <span className="text-gray-600 normal-case">(optional)</span></label>
+                        <input
+                            type="date"
+                            value={formData.endDate || ''}
+                            onChange={e => setFormData({...formData, endDate: e.target.value})}
+                            min={formData.date}
+                            className="w-full bg-scout-900 border border-scout-600 rounded-lg p-3 text-white focus:border-scout-accent outline-none"
+                        />
+                    </div>
+                    <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Location</label>
-                        <input 
+                        <input
                             value={formData.location}
                             onChange={e => setFormData({...formData, location: e.target.value})}
                             placeholder="City, State or Field Name"
@@ -363,7 +379,7 @@ const DetailView = ({ event, events, isMobile, onClose, onUpdateEvent, initiateA
                               </div>
                               <h2 className="text-2xl font-bold text-white mt-2 mb-1">{event.title}</h2>
                               <div className="space-y-2 text-sm text-gray-400 mt-4">
-                                  <div className="flex items-center gap-2"><Calendar size={14}/> {event.date}</div>
+                                  <div className="flex items-center gap-2"><Calendar size={14}/> {event.date}{event.endDate && event.endDate !== event.date ? ` - ${event.endDate}` : ''}</div>
                                   <div className="flex items-center gap-2"><MapPin size={14}/> {event.location}</div>
                                   <div className="flex items-center gap-2"><Sparkles size={14}/> {event.type} • {event.fee}</div>
                               </div>
@@ -543,7 +559,7 @@ const DetailView = ({ event, events, isMobile, onClose, onUpdateEvent, initiateA
                                 <MapPin size={20} className="text-scout-accent mt-1" />
                                 <div>
                                     <h3 className="font-bold text-white text-lg">{event.location}</h3>
-                                    <p className="text-gray-400 text-sm">{event.date}</p>
+                                    <p className="text-gray-400 text-sm">{event.date}{event.endDate && event.endDate !== event.date ? ` - ${event.endDate}` : ''}</p>
                                 </div>
                             </div>
                             <button className="w-full bg-scout-700 text-white font-bold py-2 rounded-lg text-sm flex items-center justify-center gap-2">
@@ -636,9 +652,10 @@ const EventHub: React.FC<EventHubProps> = ({ events, user, onAddEvent, onUpdateE
     title: '',
     location: '',
     date: '',
+    endDate: '',
     type: 'ID Day',
     fee: 'Free',
-    isHosting: false 
+    isHosting: false
   });
 
   // Date Logic for Grouping
@@ -662,12 +679,13 @@ const EventHub: React.FC<EventHubProps> = ({ events, user, onAddEvent, onUpdateE
     const newId = Date.now().toString();
     const baseEvent: ScoutingEvent = {
         id: newId,
-        isMine: formData.isHosting, 
+        isMine: formData.isHosting,
         role: formData.isHosting ? 'HOST' : 'ATTENDEE',
         status: formData.isHosting ? 'Draft' : 'Published',
         title: formData.title,
         location: formData.location,
         date: formData.date,
+        endDate: formData.endDate || undefined,
         type: formData.type as any,
         fee: formData.fee,
         registeredCount: 0,
@@ -697,7 +715,7 @@ const EventHub: React.FC<EventHubProps> = ({ events, user, onAddEvent, onUpdateE
         }
         
         setView('detail');
-        setFormData({ title: '', location: '', date: '', type: 'ID Day', fee: 'Free', isHosting: false });
+        setFormData({ title: '', location: '', date: '', endDate: '', type: 'ID Day', fee: 'Free', isHosting: false });
     } catch (e) {
         onAddEvent(baseEvent);
         setSelectedEvent(baseEvent);

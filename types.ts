@@ -122,6 +122,7 @@ export interface ScoutingEvent {
   status: EventStatus;
   title: string;
   date: string;
+  endDate?: string; // For multi-day events
   location: string;
   type: 'ID Day' | 'Showcase' | 'Camp' | 'Tournament';
   fee: string;

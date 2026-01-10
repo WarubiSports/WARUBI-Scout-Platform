@@ -223,7 +223,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
             </aside>
 
-            <main className="flex-1 overflow-auto p-4 md:p-10 pb-32 custom-scrollbar">
+            <main className={`flex-1 ${activeTab === DashboardTab.OUTREACH ? 'overflow-hidden p-4' : 'overflow-auto p-4 md:p-10 pb-32 custom-scrollbar'}`}>
                 {activeTab === DashboardTab.PLAYERS && (
                     <div className="space-y-8 animate-fade-in">
                         {/* P2: HOT LEAD BANNER - Shows when someone just engaged */}
