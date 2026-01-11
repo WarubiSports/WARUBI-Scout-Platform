@@ -111,6 +111,8 @@ export interface Player {
   activityStatus?: 'signal' | 'spotlight' | 'spark' | 'undiscovered';
   isRecalibrating?: boolean;
   previousScore?: number;
+  dateOfBirth?: string;
+  trialProspectId?: string;
 }
 
 export type EventStatus = 'Draft' | 'Pending Approval' | 'Approved' | 'Published' | 'Completed' | 'Rejected';
@@ -180,4 +182,23 @@ export interface ToolDef {
     desc: string;
     actionLabel: string;
     type: 'CALCULATOR' | 'ASSESSMENT' | 'COMPARE';
+}
+
+// Bug Report Types
+export type BugReportStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+export type BugReportPriority = 'low' | 'medium' | 'high' | 'critical';
+
+export interface BugReport {
+    id: string;
+    title: string;
+    description?: string;
+    pageUrl?: string;
+    reporterId?: string;
+    reporterName?: string;
+    screenshotUrl?: string;
+    status: BugReportStatus;
+    priority: BugReportPriority;
+    adminNotes?: string;
+    createdAt: string;
+    updatedAt: string;
 }

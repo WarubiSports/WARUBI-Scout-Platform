@@ -18,7 +18,8 @@ import { ErrorBoundary } from './ErrorBoundary';
 import GlobalSearch from './GlobalSearch';
 import { haptic, useSwipeGesture } from '../hooks/useMobileFeatures';
 import { generateDailyStrategy } from '../services/geminiService';
-import { Users, CalendarDays, UserCircle, MessageSquare, Newspaper, Zap, Plus, Sparkles, X, Check, PlusCircle, Flame, List, LayoutGrid, Search, MessageCircle, MoreHorizontal, ChevronDown, Ghost, Edit2, Trophy, Radio, ArrowRight, ArrowLeft, Target, Bell, Send, Archive, TrendingUp } from 'lucide-react';
+import { Users, CalendarDays, UserCircle, MessageSquare, Newspaper, Zap, Plus, Sparkles, X, Check, PlusCircle, Flame, List, LayoutGrid, Search, MessageCircle, MoreHorizontal, ChevronDown, Ghost, Edit2, Trophy, Radio, ArrowRight, ArrowLeft, Target, Bell, Send, Archive, TrendingUp, Bug } from 'lucide-react';
+import ReportBugModal from './ReportBugModal';
 
 interface DashboardProps {
     user: UserProfile;
@@ -69,6 +70,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     const [listSearch, setListSearch] = useState('');
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [isBugReportOpen, setIsBugReportOpen] = useState(false);
 
     useEffect(() => {
         const handleResize = () => {
@@ -274,7 +276,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         const handlePromote = () => {
             if (currentPlayer) {
                 // Move to next stage
-                const stages = [PlayerStatus.LEAD, PlayerStatus.INTERESTED, PlayerStatus.FINAL_REVIEW, PlayerStatus.PLACED];
+                const stages = [PlayerStatus.LEAD, PlayerStatus.INTERESTED, PlayerStatus.FINAL_REVIEW, PlayerStatus.OFFERED, PlayerStatus.PLACED];
                 const currentIndex = stages.indexOf(currentPlayer.status);
                 if (currentIndex < stages.length - 1) {
                     handleStatusChange(currentPlayer.id, stages[currentIndex + 1]);
@@ -398,8 +400,15 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <button onClick={() => setActiveTab(DashboardTab.KNOWLEDGE)} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === DashboardTab.KNOWLEDGE ? 'bg-scout-700/50 text-white' : 'text-gray-600 hover:text-gray-400'}`}><Zap size={16} /> Training</button>
                 </nav>
                 <StrategyPanel persona={user.scoutPersona || 'The Scout'} tasks={strategyTasks} onAction={(link) => setActiveTab(DashboardTab.OUTREACH)} />
-                <div className="px-4 pb-2">
+                <div className="px-4 pb-2 space-y-2">
                     <AIQuotaDisplay />
+                    <button
+                        onClick={() => setIsBugReportOpen(true)}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-500 hover:text-gray-300 hover:bg-scout-700/30 rounded-lg transition-colors"
+                    >
+                        <Bug size={14} />
+                        Report a Bug
+                    </button>
                 </div>
                 <div className="p-6 border-t border-scout-700 bg-scout-900/30">
                     <div onClick={() => setActiveTab(DashboardTab.PROFILE)} className="flex items-center gap-4 p-3 bg-scout-800 rounded-2xl border border-scout-700 cursor-pointer hover:border-scout-accent transition-colors">
@@ -559,7 +568,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                         {viewMode === 'board' ? (
                             <div className="flex gap-6 overflow-x-auto pb-8 custom-scrollbar min-h-[500px]">
-                                {[PlayerStatus.LEAD, PlayerStatus.INTERESTED, PlayerStatus.FINAL_REVIEW, PlayerStatus.PLACED].map(status => (
+                                {[PlayerStatus.LEAD, PlayerStatus.INTERESTED, PlayerStatus.FINAL_REVIEW, PlayerStatus.OFFERED, PlayerStatus.PLACED].map(status => (
                                     <div key={status} onDragOver={(e) => onDragOver(e, status)} onDrop={(e) => onDrop(e, status)} className={`flex-1 min-w-[340px] flex flex-col bg-scout-800/20 rounded-[3rem] border ${draggedOverStatus === status ? 'border-scout-accent bg-scout-accent/5 shadow-glow' : 'border-scout-700/50'}`}>
                                         <div className="p-8 border-b border-scout-700/50 bg-scout-900/20 backdrop-blur-md flex justify-between items-center rounded-t-[3rem]"><h3 className="font-black uppercase text-[10px] tracking-[0.3em] opacity-50">{status}</h3><span className="text-[10px] bg-scout-900 border border-scout-700 px-3 py-1 rounded-full text-gray-500 font-black">{players.filter(p => p.status === status).length}</span></div>
                                         <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar flex-1 max-h-[calc(100vh-450px)]">
@@ -605,6 +614,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                 {isSubmissionOpen && <PlayerSubmission onClose={handleCloseSubmission} onAddPlayer={onAddPlayer} onUpdatePlayer={onUpdatePlayer} existingPlayers={players} editingPlayer={editingPlayer} />}
                 {isBeamOpen && <SidelineBeam user={user} onClose={() => setIsBeamOpen(false)} />}
+                {isBugReportOpen && <ReportBugModal onClose={() => setIsBugReportOpen(false)} />}
             </main>
 
             <nav className="md:hidden fixed bottom-0 w-full bg-[#05080f]/95 backdrop-blur-2xl border-t border-scout-700 z-[110] px-2 pt-2 pb-6">

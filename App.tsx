@@ -6,7 +6,9 @@ import Login from './components/Login';
 import Onboarding from './components/Onboarding';
 import Dashboard from './components/Dashboard';
 import AdminDashboard from './components/AdminDashboard';
+import PasswordSetupModal from './components/PasswordSetupModal';
 import { evaluatePlayer } from './services/geminiService';
+import { sendProspectToTrial } from './services/trialService';
 import { useAuthContext } from './contexts/AuthContext';
 import { useScoutContext } from './contexts/ScoutContext';
 import { useDemoMode } from './contexts/DemoModeContext';
@@ -22,7 +24,7 @@ const App: React.FC = () => {
   const { isDemoMode, enableDemoMode, disableDemoMode } = useDemoMode();
 
   // Auth context
-  const { isAuthenticated, loading: authLoading, signOut } = useAuthContext();
+  const { isAuthenticated, loading: authLoading, signOut, needsPasswordSetup, dismissPasswordSetup } = useAuthContext();
 
   // Supabase integration
   const { scout, loading: scoutLoading, initializeScout, addXP, incrementPlacements, isDemo } = useScoutContext();
@@ -227,6 +229,34 @@ const App: React.FC = () => {
           });
       }
 
+      // Check for trial offer - send to ITP trial system
+      if (oldPlayer.status !== PlayerStatus.OFFERED && updatedPlayer.status === PlayerStatus.OFFERED) {
+          const scoutName = scout?.name || userProfile?.name || 'Unknown Scout';
+          const scoutId = scout?.id || '';
+
+          const { success, trialProspectId, error } = await sendProspectToTrial(
+              updatedPlayer,
+              scoutId,
+              scoutName
+          );
+
+          if (success && trialProspectId) {
+              // Update the prospect with the trial link
+              updatedPlayer.trialProspectId = trialProspectId;
+              handleAddNotification({
+                  type: 'SUCCESS',
+                  title: 'Trial Invitation Sent',
+                  message: `${updatedPlayer.name} has been added to ITP trial system.`
+              });
+          } else {
+              handleAddNotification({
+                  type: 'INFO',
+                  title: 'Trial Record',
+                  message: error || `${updatedPlayer.name} marked as offered.`
+              });
+          }
+      }
+
       // INTELLIGENCE RECALIBRATION LOGIC
       const highImpactFieldsChanged =
           oldPlayer.position !== updatedPlayer.position ||
@@ -379,6 +409,11 @@ const App: React.FC = () => {
             onLogout={handleLogout}
             onImpersonate={(p) => { setUserProfile(p); setView(AppView.DASHBOARD); }}
           />
+      )}
+
+      {/* Password setup prompt after magic link login */}
+      {needsPasswordSetup && isAuthenticated && (
+        <PasswordSetupModal onClose={dismissPasswordSetup} />
       )}
     </>
   );
