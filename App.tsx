@@ -83,6 +83,13 @@ const App: React.FC = () => {
     }
   }, [authLoading, scoutLoading, isAuthenticated, isDemoMode, scout]);
 
+  // Clear demo mode when user successfully authenticates
+  useEffect(() => {
+    if (isAuthenticated && isDemoMode) {
+      disableDemoMode();
+    }
+  }, [isAuthenticated, isDemoMode, disableDemoMode]);
+
   const handleAddNotification = useCallback((notification: Omit<AppNotification, 'id' | 'timestamp' | 'read'>) => {
       const newNotif: AppNotification = {
           ...notification,
